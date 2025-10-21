@@ -1,0 +1,144 @@
+<template>
+  <v-app>
+    <!-- App Bar stylisé avec gradient et élévation -->
+    <v-app-bar 
+      color="primary"
+      elevation="4"
+      prominent
+    >
+      <template v-slot:prepend>
+        <v-app-bar-nav-icon></v-app-bar-nav-icon>
+      </template>
+      
+      <v-app-bar-title class="text-h5 font-weight-bold">
+        Mon Application
+      </v-app-bar-title>
+
+      <template v-slot:append>
+        <v-btn icon>
+          <v-icon>mdi-magnify</v-icon>
+        </v-btn>
+        <v-btn icon>
+          <v-icon>mdi-bell-outline</v-icon>
+        </v-btn>
+        <v-avatar size="40" class="ml-2">
+          <v-icon>mdi-account-circle</v-icon>
+        </v-avatar>
+      </template>
+    </v-app-bar>
+
+    <!-- Navigation Drawer stylisé avec sections et icônes -->
+    <v-navigation-drawer
+      permanent
+      color="grey-lighten-5"
+      width="280"
+    >
+      <!-- En-tête du drawer -->
+      <v-sheet color="primary" class="pa-4" dark>
+        <v-avatar size="64" class="mb-2">
+          <v-icon size="40">mdi-account-circle</v-icon>
+        </v-avatar>
+        <div class="text-h6 font-weight-bold">Nom Utilisateur</div>
+        <div class="text-caption">utilisateur@email.com</div>
+      </v-sheet>
+
+      <v-divider></v-divider>
+
+      <!-- Menu principal -->
+      <v-list density="comfortable" nav class="py-2">
+        <v-list-item
+          prepend-icon="mdi-view-dashboard"
+          title="Tableau de bord"
+          value="dashboard"
+          color="primary"
+          rounded="xl"
+          class="mx-2 mb-1"
+        ></v-list-item>
+
+        <v-list-item
+          prepend-icon="mdi-account-multiple"
+          title="Utilisateurs"
+          value="users"
+          color="primary"
+          rounded="xl"
+          class="mx-2 mb-1"
+        ></v-list-item>
+
+        <v-list-item
+          prepend-icon="mdi-folder-multiple"
+          title="Projets"
+          value="projects"
+          color="primary"
+          rounded="xl"
+          class="mx-2 mb-1"
+        ></v-list-item>
+
+        <v-list-item
+          prepend-icon="mdi-calendar"
+          title="Calendrier"
+          value="calendar"
+          color="primary"
+          rounded="xl"
+          class="mx-2 mb-1"
+        ></v-list-item>
+      </v-list>
+
+      <v-divider class="my-2"></v-divider>
+
+      <!-- Section secondaire -->
+      <v-list density="comfortable" nav>
+        <v-list-subheader>PARAMÈTRES</v-list-subheader>
+        
+        <v-list-item
+          prepend-icon="mdi-cog"
+          title="Configuration"
+          value="settings"
+          color="primary"
+          rounded="xl"
+          class="mx-2 mb-1"
+        ></v-list-item>
+
+        <v-list-item
+          prepend-icon="mdi-help-circle"
+          title="Aide"
+          value="help"
+          color="primary"
+          rounded="xl"
+          class="mx-2 mb-1"
+        ></v-list-item>
+      </v-list>
+
+      <!-- Bouton de déconnexion en bas -->
+      <template v-slot:append>
+        <div class="pa-2">
+          <v-btn
+            block
+            color="error"
+            variant="tonal"
+            prepend-icon="mdi-logout"
+            rounded="lg"
+          >
+            Déconnexion
+          </v-btn>
+        </div>
+      </template>
+    </v-navigation-drawer>
+
+    <!-- Contenu principal avec couleur de fond -->
+    <v-main class="bg-grey-lighten-4">
+      <v-container fluid>
+        <slot/>
+      </v-container>
+    </v-main>
+  </v-app>
+</template>
+
+<style scoped>
+.v-list-item:hover {
+  background-color: rgba(var(--v-theme-primary), 0.08);
+}
+
+.v-list-item--active {
+  font-weight: 600;
+}
+</style>
