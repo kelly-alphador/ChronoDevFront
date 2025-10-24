@@ -7,7 +7,7 @@
       prominent
     >
       <template v-slot:prepend>
-        <v-app-bar-nav-icon></v-app-bar-nav-icon>
+        <v-app-bar-nav-icon @click="ToggleDrawer()"></v-app-bar-nav-icon>
       </template>
       
       <v-app-bar-title class="text-h5 font-weight-bold">
@@ -29,6 +29,7 @@
 
     <!-- Navigation Drawer stylisé avec sections et icônes -->
     <v-navigation-drawer
+    v-model="drawer"
       permanent
       color="grey-lighten-5"
       width="280"
@@ -49,6 +50,7 @@
         <v-list-item
           prepend-icon="mdi-view-dashboard"
           title="Tableau de bord"
+          to="/"
           value="dashboard"
           color="primary"
           rounded="xl"
@@ -59,6 +61,7 @@
           prepend-icon="mdi-account-multiple"
           title="Utilisateurs"
           value="users"
+          to="/users"
           color="primary"
           rounded="xl"
           class="mx-2 mb-1"
@@ -68,6 +71,7 @@
           prepend-icon="mdi-folder-multiple"
           title="Projets"
           value="projects"
+          to="/projets"
           color="primary"
           rounded="xl"
           class="mx-2 mb-1"
@@ -77,6 +81,7 @@
           prepend-icon="mdi-calendar"
           title="Calendrier"
           value="calendar"
+          to="/calendrier"
           color="primary"
           rounded="xl"
           class="mx-2 mb-1"
@@ -132,7 +137,15 @@
     </v-main>
   </v-app>
 </template>
-
+<script setup>
+    import { ref } from 'vue';
+    const drawer=ref(false);
+    //Methode pour afficher et cacher la navigation drawer
+    const ToggleDrawer=()=>{
+        console.log("je suis cliquer");
+        drawer.value=!drawer.value
+    }
+</script>
 <style scoped>
 .v-list-item:hover {
   background-color: rgba(var(--v-theme-primary), 0.08);
