@@ -123,7 +123,7 @@
           <v-card-item>
             <v-card-title class="text-h6 font-weight-bold">
               <v-icon class="mr-2" color="info">mdi-trophy</v-icon>
-              Top 3 Développeurs
+              Top  Développeurs
             </v-card-title>
             <v-card-subtitle>Les plus productifs</v-card-subtitle>
           </v-card-item>
