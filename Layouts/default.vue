@@ -122,6 +122,7 @@
             variant="tonal"
             prepend-icon="mdi-logout"
             rounded="lg"
+            @click="handleLogout()"
           >
             Déconnexion
           </v-btn>
@@ -138,12 +139,19 @@
   </v-app>
 </template>
 <script setup>
+    import { useAuthStore } from '@/stores/auth';
+    
     import { ref } from 'vue';
+    const authStore=useAuthStore()
     const drawer=ref(false);
     //Methode pour afficher et cacher la navigation drawer
     const ToggleDrawer=()=>{
         console.log("je suis cliquer");
         drawer.value=!drawer.value
+    }
+    const handleLogout=()=>{
+        console.log("je deconnecte")
+        authStore.logout();
     }
 </script>
 <style scoped>

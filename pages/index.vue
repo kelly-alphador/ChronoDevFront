@@ -144,8 +144,24 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '~/stores/auth';
 import WorkingHoursChart from '~/components/WorkingHoursChart.vue';
 import TopDevelopers from '~/components/TopDevelopers.vue';
+definePageMeta({
+  middleware: 'auth',
+  meta: {
+    requiresAuth: true // Cette page nécessite une authentification
+  }
+})
+
+const authStore = useAuthStore()
+
+// Récupérer les infos utilisateur au chargement de la page
+/*onMounted(async () => {
+  if (authStore.isAuthenticated && !authStore.user) {
+    await authStore.fetchUser()
+  }
+})*/
 </script>
 
 <style scoped>
