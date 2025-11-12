@@ -15,6 +15,16 @@ export interface LoginResponse {
   expiresAt: string
   errors: string[]
 }
+export interface RegisterResponse{
+  success: boolean
+  token: string
+  email: string
+  nom: string
+  prenom: string
+  role: string
+  expiresAt: string
+  errors: string[]
+}
 
 export interface AuthResult {
   success: boolean

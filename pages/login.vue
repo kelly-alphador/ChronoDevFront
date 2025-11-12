@@ -2,13 +2,13 @@
   <div class="login-container">
     <div class="login-card">
       <div class="logo">
-        <h1>🔐 Connexion</h1>
+        <h1> Connexion</h1>
       </div>
       
       <form @submit.prevent="handleLogin">
         <div class="form-group">
           <label for="email">
-            <span class="icon">📧</span>
+            <span class="icon"></span>
             Email
           </label>
           <input 
@@ -23,7 +23,7 @@
         
         <div class="form-group">
           <label for="password">
-            <span class="icon">🔒</span>
+            <span class="icon"></span>
             Mot de passe
           </label>
           <input 
@@ -37,7 +37,7 @@
         </div>
         
         <div v-if="error" class="error-message">
-          ⚠️ {{ error }}
+           {{ error }}
         </div>
         
         <button type="submit" :disabled="loading" class="submit-btn">
@@ -47,6 +47,9 @@
             Connexion en cours...
           </span>
         </button>
+        <div class="footer-text">
+          <p>Vous n'avez pas un compte ? <NuxtLink to="/register" class="link">Creez un compte</NuxtLink></p>
+        </div>
       </form>
     </div>
   </div>
@@ -74,8 +77,10 @@ const handleLogin = async () => {
 
   if (result.success) {
     router.push('/')
+    console.log("je suis aller a homme")
   } else {
     error.value = result.error
+    console.log("Error zao fagany")
   }
 
   loading.value = false
@@ -91,7 +96,11 @@ const handleLogin = async () => {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 1rem;
 }
-
+.footer-text {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: #718096;
+}
 .login-card {
   background: white;
   padding: 3rem;

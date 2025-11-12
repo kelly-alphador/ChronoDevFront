@@ -1,18 +1,13 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
-import type { User, LoginResponse, AuthResult } from '~/types/auth'
+import { type User, type LoginResponse, type AuthResult, type RegisterResponse } from '~/types/auth'
 
 export const useAuthStore = defineStore('auth', () => {
-  // ========================
   // STATE
-  // ========================
   const token = ref<string | null>(null)
   const user = ref<User | null>(null)
   const isAuthenticated = ref(false)
-
-  // ========================
   // GETTERS (computed)
-  // ========================
   const fullName = computed(() =>
     user.value ? `${user.value.prenom} ${user.value.nom}` : ''
   )
@@ -31,9 +26,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   })
 
-  // ========================
   // ACTIONS
-  // ========================
   function initAuth() {
     if (import.meta.client) {
       const storedToken = localStorage.getItem('token')
@@ -46,7 +39,61 @@ export const useAuthStore = defineStore('auth', () => {
       }
     }
   }
+  async function Register(
+  nom: string,
+  prenom: string,
+  email: string,
+  role: string,
+  password: string,
+  passwordConfirm: string
+): Promise<AuthResult> {
 
+  const config = useRuntimeConfig();
+
+  try {
+    const response = await axios.post<RegisterResponse>(
+      `${config.public.apiBase}/api/Auth/register`,
+      { nom, prenom, email, role, password, passwordConfirm }
+    );
+
+    const data = response.data;
+
+    // Si l'inscription est réussie
+    if (data.success && data.token) {
+      token.value = data.token;
+      user.value = {
+        email: data.email,
+        nom: data.nom,
+        prenom: data.prenom,
+        role: data.role
+      };
+      isAuthenticated.value = true;
+
+      //  Sauvegarde dans localStorage (côté client uniquement)
+      if (import.meta.client) {
+        localStorage.setItem('token', token.value);
+        localStorage.setItem('user', JSON.stringify(user.value));
+      }
+
+      return { success: true, data };
+    }
+    else{
+        return { success: false, error: 'Identifiants incorrects' };
+        console.log("Misy erreur kwh fagany")
+    }
+    
+
+  } catch (error: any) {
+    console.error("Erreur d'inscription :", error);
+
+    return {
+      success: false,
+      error: error.response?.data?.errors?.[0] ?? "Erreur serveur"
+    };
+    console.log("error");
+  }
+}
+//Methode pour le login
   async function login(email: string, password: string): Promise<AuthResult> {
     const config = useRuntimeConfig()
 
@@ -76,13 +123,13 @@ export const useAuthStore = defineStore('auth', () => {
 
         return { success: true, data }
       }
-
+      console.log("identifiant in correcte")
       return { success: false, error: 'Identifiants incorrects' }
     } catch (error: any) {
       console.error('Erreur de connexion:', error)
       return {
         success: false,
-        error: error.response?.data?.message || 'Erreur de connexion'
+        error: error.response.data.errors[0]
       }
     }
   }
@@ -119,6 +166,7 @@ export const useAuthStore = defineStore('auth', () => {
     isTokenExpired,
     // Actions
     initAuth,
+    Register,
     login,
     logout,
     checkAuth

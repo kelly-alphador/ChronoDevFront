@@ -13,7 +13,7 @@
         <h1 class="title">Créer un compte</h1>
       </div>
 
-      <form @submit.prevent="handleSubmit" class="register-form">
+      <form @submit.prevent="handleRegister" class="register-form">
         <div class="form-row">
           <div class="form-group">
             <label for="nom" class="label">Nom</label>
@@ -90,13 +90,15 @@
             required
           />
         </div>
-
+        <div v-if="error" class="error-message">
+           {{ error }}
+        </div>
         <button type="submit" class="submit-btn">
-          <span>S'inscrire</span>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-            <polyline points="12 5 19 12 12 19"></polyline>
-          </svg>
+          <span v-if="!loading">S'inscrire</span>
+          <span v-else class="loading">
+            <span class="spinner"></span>
+            Connexion en cours...
+          </span>
         </button>
 
         <div class="footer-text">
@@ -114,10 +116,14 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '~/stores/auth'
+import { useRouter } from 'vue-router'
 definePageMeta({
   layout: 'logindefault'
 })
-
+const router = useRouter()
+const authStore = useAuthStore()
+const error = ref('')
 const formData = ref({
   nom: '',
   prenom: '',
@@ -126,19 +132,64 @@ const formData = ref({
   passwordConfirm: '',
   role: ''
 })
+const loading=ref(false);
+const handleRegister = async () => {
+  console.log("je suis cliquer")
+  //error.value = ''
+  loading.value = true
 
-const handleSubmit = () => {
-  if (formData.value.password !== formData.value.passwordConfirm) {
-    alert('Les mots de passe ne correspondent pas')
-    return
+  const result = await authStore.Register(
+    formData.value.nom,
+    formData.value.prenom,
+    formData.value.email,
+    formData.value.role,
+    formData.value.password,
+    formData.value.passwordConfirm
+  )
+
+  if (result.success) {
+    router.push('/')
+    console.log("je suis aller a homme")
+  } else {
+    error.value=result.error
+     console.log("Error zao fagany")
   }
-  
-  console.log('Données du formulaire:', formData.value)
-  // Ajoutez ici votre logique d'inscription
+
+  loading.value = false
 }
 </script>
 
 <style scoped>
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.error-message {
+  background: #fee;
+  color: #c33;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  text-align: center;
+  border-left: 4px solid #c33;
+  font-weight: 500;
+  animation: shake 0.5s;
+}
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 .register-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

@@ -6,7 +6,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      apiBase: 'https://localhost:7191' // URL de votre backend
+      apiBase: 'https://localhost:44370' 
     }
   },
   // Configuration TypeScript
