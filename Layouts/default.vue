@@ -39,8 +39,8 @@
         <v-avatar size="64" class="mb-2">
           <v-icon size="40">mdi-account-circle</v-icon>
         </v-avatar>
-        <div class="text-h6 font-weight-bold">Nom Utilisateur</div>
-        <div class="text-caption">utilisateur@email.com</div>
+        <div class="text-h6 font-weight-bold">{{ UserName }}</div>
+        <div class="text-caption">{{ UserEmail }}</div>
       </v-sheet>
 
       <v-divider></v-divider>
@@ -142,13 +142,25 @@
     import { useAuthStore } from '@/stores/auth';
     
     import { ref } from 'vue';
+import auth from '~/middleware/auth';
     const authStore=useAuthStore()
     const drawer=ref(false);
+    const UserName=computed(()=>{
+        if(authStore.user && authStore.user.nom && authStore.user.prenom)
+        {
+          return `${authStore.user.nom} ${authStore.user.prenom}`
+        }
+        return 'user inconnu'
+    })
+    const UserEmail=computed(()=>{
+        return authStore.user?.email ?? 'email inconnu'
+    })
     //Methode pour afficher et cacher la navigation drawer
     const ToggleDrawer=()=>{
         console.log("je suis cliquer");
         drawer.value=!drawer.value
     }
+    //InformationUSer=authStore.user.value
     const handleLogout=()=>{
         console.log("je deconnecte")
         authStore.logout();
