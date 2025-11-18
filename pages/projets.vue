@@ -1,6 +1,19 @@
 
 <template>
   <v-container>
+    <v-row class="mb-4">
+      <v-col cols="12">
+        <v-btn 
+          color="primary" 
+          size="large"
+          prepend-icon="mdi-plus"
+          @click="openAddProjectDialog"
+          style="float: right;"
+        >
+          Nouveau Projet
+        </v-btn>
+      </v-col>
+    </v-row>
     <v-row>
       <v-col cols="4" v-for="project in projects" :key="project.id">
         <v-card class="mx-auto" max-width="400">
@@ -225,24 +238,7 @@ const TacheByPorjectId = ref([])
 const projectStore = useProjectStore()
 
 onMounted(async () => {
-  const response = await projectStore.GetIdName()
-  if (response.success && response.data) {
-    projects.value = response.data.map((p) => ({
-      ...p,
-      open: false,
-      tasks: []
-    }))
-   
-    for (const project of projects.value) {
-      const taches = await projectStore.TacheGetProjectId(project.id)
-      if (taches.success && taches.data) {
-        project.tasks = taches.data
-        console.log(project.tasks)
-      }
-    }
-  } else {
-    console.error(response.error)
-  }
+      loadProject()
 })
 
 const detailsDialog = ref(false)
@@ -292,13 +288,38 @@ const viewProjectDetails = async (project) => {
   }
 }
 
-const deleteProject = (projectId) => {
-  const index = projects.value.findIndex(p => p.id === projectId)
-  if (index !== -1) {
-    projects.value.splice(index, 1)
+const deleteProject = async (projectId) => {
+    const response=await projectStore.DeleteById(projectId);
+    console.log("io aka",response)
+    if(response.success && response.statusCode=="200")
+    {
+          loadProject()
+          console.log(response.message)
+    }
+    else{
+      console.log(response.error)
+    }
+}
+const loadProject=async()=>{
+  const response = await projectStore.GetIdName()
+  if (response.success && response.data) {
+    projects.value = response.data.map((p) => ({
+      ...p,
+      open: false,
+      tasks: []
+    }))
+   
+    for (const project of projects.value) {
+      const taches = await projectStore.TacheGetProjectId(project.id)
+      if (taches.success && taches.data) {
+        project.tasks = taches.data
+        console.log(project.tasks)
+      }
+    }
+  } else {
+    console.error(response.error)
   }
 }
-
 const deleteTask = (projectId, taskId) => {
   const project = projects.value.find(p => p.id === projectId)
   if (project) {

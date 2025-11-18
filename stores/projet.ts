@@ -33,7 +33,21 @@ export const useProjectStore = defineStore('projet', () => {
         }
     }
 
-    
+    async function DeleteById(id:number) {
+        try{
+            const response=await axios.delete(`${config.public.apiBase}/api/V1/Project/${id}`)
+            console.log("toy aka",response.data)
+            return response.data
+        }
+        catch(error:any)
+        {
+            console.log("error", error);
+            return {
+                success: false,
+                error: error.response?.data?.errors?.[0] ?? "Erreur serveur"
+            };
+        }
+    }
     async function GetProjectById(id: number) {
         try {
             const response = await axios.get(`${config.public.apiBase}/api/V1/Project/ProjectById`, {
@@ -50,5 +64,5 @@ export const useProjectStore = defineStore('projet', () => {
         }
     }
 
-    return { GetIdName, TacheGetProjectId, GetProjectById };
+    return { GetIdName, TacheGetProjectId, GetProjectById , DeleteById };
 });
