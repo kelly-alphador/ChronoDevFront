@@ -1,3 +1,4 @@
+
 <template>
   <v-container>
     <v-row>
@@ -67,7 +68,7 @@
       <v-card v-if="selectedProject" class="project-details-card">
         <v-card-title class="bg-primary text-white d-flex align-center pa-4">
           <v-icon class="mr-2" size="large">mdi-folder-open</v-icon>
-          <span class="text-h5">{{ selectedProject.name }}</span>
+          <span class="text-h5">{{ selectedProject.nom }}</span>
           <v-spacer></v-spacer>
           <v-btn icon @click="detailsDialog = false" variant="text">
             <v-icon color="white">mdi-close</v-icon>
@@ -120,7 +121,17 @@
                     <v-icon size="small" color="grey-darken-1">mdi-clock-outline</v-icon>
                     Durée estimée
                   </div>
-                  <div class="info-value">{{ selectedProject.dureeEstime }} heures</div>
+                  <div class="info-value">{{ selectedProject.dureeEstimee }} heures</div>
+                </div>
+              </v-col>
+
+              <v-col cols="6">
+                <div class="info-item">
+                  <div class="info-label">
+                    <v-icon size="small" color="grey-darken-1">mdi-calendar-range</v-icon>
+                    Nombre de jours
+                  </div>
+                  <div class="info-value">{{ selectedProject.nombre_jour }} jours</div>
                 </div>
               </v-col>
             </v-row>
@@ -135,7 +146,7 @@
             <v-divider class="mb-4"></v-divider>
             
             <v-row>
-              <v-col cols="4">
+              <v-col cols="6">
                 <v-card color="blue-lighten-5" elevation="0" class="stat-card">
                   <v-card-text class="text-center pa-4">
                     <v-icon color="primary" size="40" class="mb-2">mdi-format-list-checks</v-icon>
@@ -146,20 +157,8 @@
                   </v-card-text>
                 </v-card>
               </v-col>
-              
-              <v-col cols="4">
-                <v-card color="green-lighten-5" elevation="0" class="stat-card">
-                  <v-card-text class="text-center pa-4">
-                    <v-icon color="green" size="40" class="mb-2">mdi-timer-sand</v-icon>
-                    <div class="text-h4 text-green font-weight-bold">
-                      {{ totalTasksDuration }}h
-                    </div>
-                    <div class="text-caption text-grey-darken-1 mt-1">Durée des tâches</div>
-                  </v-card-text>
-                </v-card>
-              </v-col>
 
-              <v-col cols="4">
+              <v-col cols="6">
                 <v-card color="orange-lighten-5" elevation="0" class="stat-card">
                   <v-card-text class="text-center pa-4">
                     <v-icon color="orange" size="40" class="mb-2">mdi-calendar-range</v-icon>
@@ -195,15 +194,10 @@
                 </template>
 
                 <v-list-item-title class="font-weight-medium mb-1">
-                  {{ task.name }}
+                  {{ task.nom }}
                 </v-list-item-title>
 
-                <template v-slot:append>
-                  <v-chip color="primary" size="small" variant="tonal">
-                    <v-icon start size="small">mdi-clock-outline</v-icon>
-                    {{ task.dureeEstime }}h
-                  </v-chip>
-                </template>
+               
               </v-list-item>
             </v-list>
           </div>
@@ -222,44 +216,35 @@
 </template>
 
 <script setup>
-import { ref, computed,onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useProjectStore } from '~/stores/projet'
-const projectId=ref();
-const projects=ref([])
-const TacheByPorjectId=ref([])
-const projectStore=useProjectStore()
+
+const projectId = ref()
+const projects = ref([])
+const TacheByPorjectId = ref([])
+const projectStore = useProjectStore()
+
 onMounted(async () => {
   const response = await projectStore.GetIdName()
   if (response.success && response.data) {
-    projects.value = response.data.map((p)=>({
-        ...p,
-        open:false,
-        tasks:[]
+    projects.value = response.data.map((p) => ({
+      ...p,
+      open: false,
+      tasks: []
     }))
-    for(const project in projects.value)
-    {
-        const tache=await projectStore.TacheGetProjectId(project.id)
-         for (const project of projects.value) {
-          const taches = await projectStore.TacheGetProjectId(project.id)
-          if (taches.success && taches.data) {
-            project.tasks = taches.data
-            console.log(project.tasks)
-          }
-        }
+   
+    for (const project of projects.value) {
+      const taches = await projectStore.TacheGetProjectId(project.id)
+      if (taches.success && taches.data) {
+        project.tasks = taches.data
+        console.log(project.tasks)
+      }
     }
-    
   } else {
     console.error(response.error)
   }
 })
-/*const ListTacheByProjet=async(projectId)=>{
-    const response=await projectStore.TacheGetProjectId(projectId)
-    if (response.success && response.data) {
-    TacheByPorjectId.value = response.data
-    } else {
-      console.error(response.error)
-    }
-}*/
+
 const detailsDialog = ref(false)
 const selectedProject = ref(null)
 
@@ -290,9 +275,21 @@ const toggleDrawer = (projectId) => {
   }
 }
 
-const viewProjectDetails = (project) => {
-  selectedProject.value = project
-  detailsDialog.value = true
+const viewProjectDetails = async (project) => {
+  // Récupérer les donnees depuis le backend
+  const response = await projectStore.GetProjectById(project.id)
+  if (response.success && response.data) {
+    console.log(response.data[0])
+    selectedProject.value = {
+      ...response.data[0],
+      id: project.id,
+      tasks: project.tasks,
+      open: project.open
+    }
+    detailsDialog.value = true
+  } else {
+    console.error('Erreur lors de la récupération des détails du projet:', response.error)
+  }
 }
 
 const deleteProject = (projectId) => {
