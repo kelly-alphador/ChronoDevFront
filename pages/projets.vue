@@ -7,7 +7,7 @@
           color="primary" 
           size="large"
           prepend-icon="mdi-plus"
-          @click="openAddProjectDialog"
+          @click="CloseModal"
           style="float: right;"
         >
           Nouveau Projet
@@ -225,13 +225,67 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <ModalBox title="AJout de projet" v-if="IsActif" @close="CloseModal">
+        <form class="form-projet" @submit.prevent="submitProjet">
+
+          <div class="form-group">
+            <label for="nom">Nom du projet</label>
+            <input 
+              v-model="form.nom"
+              type="text" 
+              id="nom" 
+              placeholder="Entrez le nom du projet"
+              maxlength="100"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="dateCreation">Date de création</label>
+            <input 
+              v-model="form.dateCreation"
+              type="datetime-local" 
+              id="dateCreation"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="dureeEstimee">Durée estimée (en heures)</label>
+            <input 
+              v-model.number="form.dureeEstimee"
+              type="number" 
+              id="dureeEstimee" 
+              placeholder="Ex: 120.5"
+              step="0.1"
+              min="0"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="dateFin">Date de fin</label>
+            <input 
+              v-model="form.dateFin"
+              type="datetime-local" 
+              id="dateFin"
+            >
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Ajouter</button>
+            <button type="button" class="btn-secondary" @click="CloseModal">Annuler</button>
+          </div>
+
+        </form>
+      </ModalBox>
+
   </v-container>
+ 
 </template>
 
 <script setup>
+import ModalBox from '~/components/ModalBox.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useProjectStore } from '~/stores/projet'
-
+const IsActif=ref(false)
 const projectId = ref()
 const projects = ref([])
 const TacheByPorjectId = ref([])
@@ -243,11 +297,61 @@ onMounted(async () => {
 
 const detailsDialog = ref(false)
 const selectedProject = ref(null)
+// Le formulaire du projet
+const form = ref({
+  nom: "",
+  dateCreation: "",
+  dureeEstimee: 0,
+  dateFin: "",
+})
 
+// Fonction d’ajout du projet
+async function submitProjet() {
+  try {
+    const user = JSON.parse(localStorage.getItem("user"))
+    const managerId = user.id
+
+    const projet = {
+      nom: form.value.nom,
+      dateCreation: new Date(form.value.dateCreation),
+      dureeEstimee: form.value.dureeEstimee,
+      dateFin: new Date(form.value.dateFin),
+      managerId: managerId
+    }
+
+    const result = await projectStore.addProjet(projet)
+
+    if (result.success) {
+      loadProject()
+      CloseModal()
+      resetForm()
+    } else {
+      alert("Erreur : " + result.error)
+    }
+
+  } catch (error) {
+    console.error(error)
+    alert("Une erreur inattendue est survenue.")
+  }
+}
+
+function resetForm() {
+  form.value = {
+    nom: "",
+    dateCreation: "",
+    dureeEstimee: 0,
+    dateFin: "",
+  }
+}
+//Total des taches sur une projets
 const totalTasksDuration = computed(() => {
   if (!selectedProject.value) return 0
   return selectedProject.value.tasks.reduce((sum, task) => sum + task.dureeEstime, 0)
 })
+const CloseModal=()=>{
+    IsActif.value=!IsActif.value
+    console.log(IsActif.value)
+}
 
 const projectDuration = computed(() => {
   if (!selectedProject.value) return 0
@@ -320,14 +424,17 @@ const loadProject=async()=>{
     console.error(response.error)
   }
 }
-const deleteTask = (projectId, taskId) => {
-  const project = projects.value.find(p => p.id === projectId)
-  if (project) {
-    const taskIndex = project.tasks.findIndex(t => t.id === taskId)
-    if (taskIndex !== -1) {
-      project.tasks.splice(taskIndex, 1)
+const deleteTask =async (projectId, taskId) => {
+  const response=await projectStore.DeleteTacheById(taskId);
+    console.log("io aka",response)
+    if(response.success && response.statusCode=="200")
+    {
+          loadProject()
+          console.log(response.message)
     }
-  }
+    else{
+      console.log(response.error)
+    }
 }
 </script>
 

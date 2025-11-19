@@ -1,4 +1,5 @@
 export interface User {
+  id:number
   email: string
   nom: string
   prenom: string
@@ -8,6 +9,7 @@ export interface User {
 export interface LoginResponse {
   success: boolean
   token: string
+   id:number
   email: string
   nom: string
   prenom: string
@@ -18,6 +20,7 @@ export interface LoginResponse {
 export interface RegisterResponse{
   success: boolean
   token: string
+  id:number
   email: string
   nom: string
   prenom: string

@@ -1,323 +1,264 @@
 <template>
-  <v-dialog
-    v-model="dialog"
-    :max-width="maxWidth"
-    :persistent="persistent"
-  >
-    <template v-slot:activator="{ props: activatorProps }">
-      <slot name="activator" :props="activatorProps">
-        <v-btn
-          v-bind="activatorProps"
-          :color="buttonColor"
-          :prepend-icon="buttonIcon"
-          :text="buttonText"
-          variant="elevated"
-          class="text-none font-weight-medium"
-        ></v-btn>
-      </slot>
-    </template>
-
-    <v-card class="modal-card" elevation="24">
-      <!-- Header avec gradient bleu -->
+  <div class="modal-overlay" @click.self="CloseModal">
+    <div class="modal-card" @click.stop>
       <div class="modal-header">
-        <div class="header-gradient"></div>
-        <div class="header-content">
-          <div class="d-flex align-center">
-            <v-avatar 
-              :color="iconColor" 
-              size="56" 
-              class="elevation-4 icon-avatar"
-            >
-              <v-icon size="32" color="white">{{ icon }}</v-icon>
-            </v-avatar>
-            <div class="ml-4">
-              <h2 class="modal-title">{{ title }}</h2>
-              <p v-if="subtitle" class="modal-subtitle">{{ subtitle }}</p>
-            </div>
-          </div>
-          <v-btn
-            icon
-            variant="text"
-            class="close-btn"
-            @click="closeDialog"
-          >
-            <v-icon color="white">mdi-close</v-icon>
-          </v-btn>
-        </div>
-        <!-- Décoration -->
-        <div class="header-decoration">
-          <div class="decoration-circle circle-1"></div>
-          <div class="decoration-circle circle-2"></div>
-          <div class="decoration-circle circle-3"></div>
-        </div>
+        <h2 class="modal-title">{{ title }}</h2>
+        <button class="close-btn" @click="CloseModal">&times;</button>
       </div>
-
-      <!-- Corps du modal avec slot -->
-      <v-card-text class="modal-body pt-8 pb-6">
-        <slot name="content">
-          <p class="text-body-1 text-grey-darken-1">Contenu par défaut</p>
-        </slot>
-      </v-card-text>
-
-      <!-- Divider décoratif -->
-      <v-divider class="divider-gradient"></v-divider>
-
-      <!-- Actions -->
-      <v-card-actions class="modal-actions pa-6">
-        <v-spacer></v-spacer>
-        <slot name="actions">
-          <v-btn
-            text="Annuler"
-            variant="text"
-            color="grey-darken-1"
-            class="text-none font-weight-medium px-6"
-            @click="closeDialog"
-          ></v-btn>
-          <v-btn
-            :text="confirmText"
-            variant="elevated"
-            color="primary"
-            class="text-none font-weight-medium px-8 ml-3"
-            :loading="loading"
-            @click="handleConfirm"
-          >
-            <template v-slot:prepend>
-              <v-icon>{{ confirmIcon }}</v-icon>
-            </template>
-          </v-btn>
-        </slot>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+      <div class="modal-body">
+        <slot></slot>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-
 const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    default: false
-  },
   title: {
     type: String,
-    default: 'Titre du modal'
-  },
-  subtitle: {
-    type: String,
-    default: ''
-  },
-  icon: {
-    type: String,
-    default: 'mdi-information'
-  },
-  iconColor: {
-    type: String,
-    default: 'blue-darken-2'
-  },
-  maxWidth: {
-    type: [String, Number],
-    default: '700'
-  },
-  persistent: {
-    type: Boolean,
-    default: false
-  },
-  buttonText: {
-    type: String,
-    default: 'Ouvrir'
-  },
-  buttonIcon: {
-    type: String,
-    default: 'mdi-plus'
-  },
-  buttonColor: {
-    type: String,
-    default: 'primary'
-  },
-  confirmText: {
-    type: String,
-    default: 'Confirmer'
-  },
-  confirmIcon: {
-    type: String,
-    default: 'mdi-check'
-  },
-  loading: {
-    type: Boolean,
-    default: false
+    required: true
   }
 })
 
-const emit = defineEmits(['update:modelValue', 'confirm', 'close'])
+const emit = defineEmits(['close'])
 
-const dialog = ref(props.modelValue)
-
-watch(() => props.modelValue, (newVal) => {
-  dialog.value = newVal
-})
-
-watch(dialog, (newVal) => {
-  emit('update:modelValue', newVal)
-  if (!newVal) {
-    emit('close')
-  }
-})
-
-const closeDialog = () => {
-  dialog.value = false
-}
-
-const handleConfirm = () => {
-  emit('confirm')
+function CloseModal() {
+  emit('close')
 }
 </script>
 
 <style scoped>
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  /*backdrop-filter: blur(4px);*/
+}
+
 .modal-card {
-  border-radius: 20px !important;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 600px;
   overflow: hidden;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .modal-header {
-  position: relative;
-  padding: 32px 32px 24px;
-  overflow: hidden;
-}
-
-.header-gradient {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
-  background: linear-gradient(135deg, #1976d2 0%, #1565c0 50%, #0d47a1 100%);
-  z-index: 0;
-}
-
-.header-content {
-  position: relative;
-  z-index: 2;
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  padding: 20px 24px;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-}
-
-.icon-avatar {
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  transition: transform 0.3s ease;
-}
-
-.icon-avatar:hover {
-  transform: scale(1.1) rotate(5deg);
+  align-items: center;
 }
 
 .modal-title {
-  font-size: 1.75rem;
-  font-weight: 700;
   color: white;
   margin: 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.modal-subtitle {
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.85);
-  margin: 4px 0 0;
-  font-weight: 400;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .close-btn {
-  background: rgba(255, 255, 255, 0.2) !important;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background-color 0.2s, transform 0.2s;
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
+  background-color: rgba(255, 255, 255, 0.15);
   transform: rotate(90deg);
 }
 
-.header-decoration {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.decoration-circle {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.circle-1 {
-  width: 150px;
-  height: 150px;
-  top: -50px;
-  right: -30px;
-}
-
-.circle-2 {
-  width: 100px;
-  height: 100px;
-  bottom: -30px;
-  left: 40%;
-}
-
-.circle-3 {
-  width: 80px;
-  height: 80px;
-  top: 20%;
-  left: -20px;
+.close-btn:active {
+  transform: rotate(90deg) scale(0.95);
 }
 
 .modal-body {
-  min-height: 100px;
+  padding: 24px;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
-.divider-gradient {
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #1976d2, transparent);
+/* Scrollbar personnalisée */
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #1976d2;
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #1565c0;
+}
+
+/* Styles pour le formulaire dans le slot */
+.modal-body :deep(.form-projet) {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.modal-body :deep(.form-group) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-body :deep(.form-group label) {
+  display: block;
+  color: #333;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.modal-body :deep(.form-group input),
+.modal-body :deep(.form-group select),
+.modal-body :deep(.form-group textarea) {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background-color: #fafafa;
+}
+
+.modal-body :deep(.form-group input:focus),
+.modal-body :deep(.form-group select:focus),
+.modal-body :deep(.form-group textarea:focus) {
+  outline: none;
+  border-color: #1976d2;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.modal-body :deep(.form-group input:hover),
+.modal-body :deep(.form-group select:hover),
+.modal-body :deep(.form-group textarea:hover) {
+  border-color: #bdbdbd;
+}
+
+.modal-body :deep(.form-actions) {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.modal-body :deep(.btn-primary) {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  color: white;
   border: none;
+  padding: 12px 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
 }
 
-.modal-actions {
-  background: linear-gradient(to bottom, rgba(25, 118, 210, 0.02), transparent);
+.modal-body :deep(.btn-primary:hover) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
 }
 
-/* Animations */
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.modal-body :deep(.btn-primary:active) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
 }
 
-.modal-card {
-  animation: slideDown 0.3s ease-out;
+.modal-body :deep(.btn-secondary) {
+  background: white;
+  color: #666;
+  border: 2px solid #e0e0e0;
+  padding: 12px 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.modal-body :deep(.btn-secondary:hover) {
+  background: #f5f5f5;
+  border-color: #bdbdbd;
+  transform: translateY(-2px);
+}
+
+.modal-body :deep(.btn-secondary:active) {
+  transform: translateY(0);
 }
 
 /* Responsive */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
+  .modal-card {
+    width: 95%;
+    max-width: none;
+    margin: 20px;
+  }
+
   .modal-header {
-    padding: 24px 20px 20px;
+    padding: 16px 20px;
   }
-  
+
   .modal-title {
-    font-size: 1.4rem;
+    font-size: 20px;
   }
-  
-  .icon-avatar {
-    width: 48px !important;
-    height: 48px !important;
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .modal-body :deep(.form-actions) {
+    flex-direction: column;
+  }
+
+  .modal-body :deep(.btn-primary),
+  .modal-body :deep(.btn-secondary) {
+    width: 100%;
   }
 }
 </style>

@@ -62,6 +62,7 @@ export const useAuthStore = defineStore('auth', () => {
     if (data.success && data.token) {
       token.value = data.token;
       user.value = {
+        id:data.id,
         email: data.email,
         nom: data.nom,
         prenom: data.prenom,
@@ -108,10 +109,12 @@ export const useAuthStore = defineStore('auth', () => {
       if (data.success && data.token) {
         token.value = data.token
         user.value = {
+          id:data.id,
           email: data.email,
           nom: data.nom,
           prenom: data.prenom,
-          role: data.role
+          role: data.role,
+          
         }
         isAuthenticated.value = true
 
