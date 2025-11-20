@@ -38,43 +38,45 @@ export const useProjectStore = defineStore('projet', () => {
 
             const userString = localStorage.getItem("user")
             if (!userString) {
-            return { success: false, error: "Utilisateur non authentifié" }
+                return { success: false, error: "Utilisateur non authentifié" }
             }
 
             const user = JSON.parse(userString) as { id: number }
             const managerId = user.id
 
             const payload = {
-            nom: projet.nom,
-            dateCreation: projet.dateCreation,
-            dureeEstimee: projet.dureeEstimee,
-            dateFin: projet.dateFin,
-            ManagerId: managerId
+                nom: projet.nom,
+                dateCreation: projet.dateCreation,
+                dureeEstimee: projet.dureeEstimee,
+                dateFin: projet.dateFin,
+                ManagerId: managerId
             }
 
             const response = await axios.post<ApiResponse>(
-            `${config.public.apiBase}/api/V1/project`,
-            payload
+                `${config.public.apiBase}/api/V1/project`,
+                payload
             )
 
             return {
-            success: true,
-            data: response.data
+                success: true,
+                data: response.data
             }
 
-        } catch (error: any) {
+    } catch (error: any) {
             console.error("Erreur lors de l'ajout du projet :", error)
 
+            // CORRECTION ICI : Retourner la structure correcte
             if (error.response?.data) {
-            return {
-                success: false,
-                error: error.response.data.errors || error.response.data.message
-            }
+                return {
+                    success: false,
+                    error: error.response.data.message || error.response.data.errors || "Erreur serveur",
+                    data: error.response.data // Ajouter data pour accéder à la réponse complète
+                }
             }
 
             return {
-            success: false,
-            error: error.message || "Erreur inconnue"
+                success: false,
+                error: error.message || "Erreur inconnue"
             }
         }
     }
@@ -123,6 +125,51 @@ export const useProjectStore = defineStore('projet', () => {
             };
         }
     }
+        async function addTache(tache: {
+        nom: string;
+        dureeEstimee: number;
+        dateDebut: string;
+        dateFin: string;
+        projetId: number;
+    }) {
+        try {
+            const response = await fetch("https://localhost:44370/api/V1/Tache", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(tache),
+            });
 
-    return { GetIdName, TacheGetProjectId, GetProjectById , DeleteById ,DeleteTacheById ,addProjet};
+            const data = await response.json();
+            console.log("Réponse du serveur:", data);
+
+            if (response.ok && data.success && data.statusCode === 200) {
+                console.log("Tâche ajoutée avec succès :", data.message);
+                return { 
+                    success: true, 
+                    statusCode: 200,
+                    message: data.message,
+                    data: data.data 
+                };
+            } else {
+                console.error("Erreur lors de l'ajout :", data.message || data.error);
+                return { 
+                    success: false, 
+                    statusCode: data.statusCode || 400,
+                    error: data.message || data.error,
+                    message: data.message || data.error
+                };
+            }
+        } catch (err) {
+            console.error("Erreur réseau ou serveur :", err);
+            return { 
+                success: false, 
+                statusCode: 500,
+                error: "Erreur réseau ou serveur",
+                message: "Erreur réseau ou serveur" 
+            };
+        }
+    }
+    return { GetIdName, TacheGetProjectId, GetProjectById , DeleteById ,DeleteTacheById ,addProjet,addTache};
 });

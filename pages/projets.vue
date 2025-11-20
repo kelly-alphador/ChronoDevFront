@@ -1,4 +1,3 @@
-
 <template>
   <v-container>
     <v-row class="mb-4">
@@ -35,6 +34,11 @@
               <v-spacer></v-spacer>
 
               <v-btn 
+                icon="mdi-plus" 
+                @click="openAddTaskModal(project)"
+              ></v-btn>
+
+              <v-btn 
                 icon="mdi-eye" 
                 @click="viewProjectDetails(project)"
               ></v-btn>
@@ -49,7 +53,6 @@
               <v-expand-transition>
                 <v-container v-show="project.open">
                   <v-row dense>
-                    <!--ETo aka-->
                     <v-col cols="12" v-for="task in project.tasks" :key="task.id" >
                       <v-card color="white" elevation="1" class="task-card">
                         <v-card-title class="text-subtitle-2 py-2">
@@ -89,7 +92,6 @@
         </v-card-title>
 
         <v-card-text class="pt-6 pb-4">
-          <!-- Informations du projet -->
           <div class="mb-5">
             <div class="text-h6 mb-3 d-flex align-center">
               <v-icon color="primary" class="mr-2">mdi-information</v-icon>
@@ -150,7 +152,6 @@
             </v-row>
           </div>
 
-          <!-- Statistiques du projet -->
           <div class="mb-5">
             <div class="text-h6 mb-3 d-flex align-center">
               <v-icon color="primary" class="mr-2">mdi-chart-box</v-icon>
@@ -185,7 +186,6 @@
             </v-row>
           </div>
 
-          <!-- Liste des tâches -->
           <div>
             <div class="text-h6 mb-3 d-flex align-center">
               <v-icon color="primary" class="mr-2">mdi-clipboard-list</v-icon>
@@ -209,8 +209,6 @@
                 <v-list-item-title class="font-weight-medium mb-1">
                   {{ task.nom }}
                 </v-list-item-title>
-
-               
               </v-list-item>
             </v-list>
           </div>
@@ -225,79 +223,139 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <ModalBox title="AJout de projet" v-if="IsActif" @close="CloseModal">
-        <form class="form-projet" @submit.prevent="submitProjet">
 
-          <div class="form-group">
-            <label for="nom">Nom du projet</label>
-            <input 
-              v-model="form.nom"
-              type="text" 
-              id="nom" 
-              placeholder="Entrez le nom du projet"
-              maxlength="100"
-            >
-          </div>
+    <!-- Modal pour ajouter un projet -->
+    <ModalBox title="Ajout de projet" v-if="IsActif" @close="CloseModal">
+      <form class="form-projet" @submit.prevent="submitProjet">
+        <div class="form-group">
+          <label for="nom">Nom du projet</label>
+          <input 
+            v-model="form.nom"
+            type="text" 
+            id="nom" 
+            placeholder="Entrez le nom du projet"
+            maxlength="100"
+          >
+        </div>
 
-          <div class="form-group">
-            <label for="dateCreation">Date de création</label>
-            <input 
-              v-model="form.dateCreation"
-              type="datetime-local" 
-              id="dateCreation"
-            >
-          </div>
+        <div class="form-group">
+          <label for="dateCreation">Date de création</label>
+          <input 
+            v-model="form.dateCreation"
+            type="datetime-local" 
+            id="dateCreation"
+          >
+        </div>
 
-          <div class="form-group">
-            <label for="dureeEstimee">Durée estimée (en heures)</label>
-            <input 
-              v-model.number="form.dureeEstimee"
-              type="number" 
-              id="dureeEstimee" 
-              placeholder="Ex: 120.5"
-              step="0.1"
-              min="0"
-            >
-          </div>
+        <div class="form-group">
+          <label for="dureeEstimee">Durée estimée (en heures)</label>
+          <input 
+            v-model.number="form.dureeEstimee"
+            type="number" 
+            id="dureeEstimee" 
+            placeholder="Ex: 120.5"
+            step="0.1"
+            min="0"
+          >
+        </div>
 
-          <div class="form-group">
-            <label for="dateFin">Date de fin</label>
-            <input 
-              v-model="form.dateFin"
-              type="datetime-local" 
-              id="dateFin"
-            >
-          </div>
+        <div class="form-group">
+          <label for="dateFin">Date de fin</label>
+          <input 
+            v-model="form.dateFin"
+            type="datetime-local" 
+            id="dateFin"
+          >
+        </div>
 
-          <div class="form-actions">
-            <button type="submit" class="btn-primary">Ajouter</button>
-            <button type="button" class="btn-secondary" @click="CloseModal">Annuler</button>
-          </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Ajouter</button>
+          <button type="button" class="btn-secondary" @click="CloseModal">Annuler</button>
+        </div>
+      </form>
+    </ModalBox>
 
-        </form>
-      </ModalBox>
+    <!-- Modal pour ajouter une tâche -->
+    <ModalBox title="Ajout de tâche" v-if="IsTaskModalActive" @close="closeTaskModal">
+      <form class="form-projet" @submit.prevent="submitTask">
+        <div class="form-group">
+          <label for="taskNom">Nom de la tâche</label>
+          <input 
+            v-model="taskForm.nom"
+            type="text" 
+            id="taskNom" 
+            placeholder="Entrez le nom de la tâche"
+            maxlength="100"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="taskDureeEstimee">Durée estimée (en heures)</label>
+          <input 
+            v-model.number="taskForm.dureeEstimee"
+            type="number" 
+            id="taskDureeEstimee" 
+            placeholder="Ex: 8.5"
+            step="0.1"
+            min="0"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="taskDateDebut">Date de début</label>
+          <input 
+            v-model="taskForm.dateDebut"
+            type="datetime-local" 
+            id="taskDateDebut"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="taskDateFin">Date de fin</label>
+          <input 
+            v-model="taskForm.dateFin"
+            type="datetime-local" 
+            id="taskDateFin"
+            required
+          >
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Ajouter</button>
+          <button type="button" class="btn-secondary" @click="closeTaskModal">Annuler</button>
+        </div>
+      </form>
+    </ModalBox>
 
   </v-container>
- 
 </template>
 
 <script setup>
+import { useAlert } from "@/composables/useAlert"
+
+const { success, error, confirm, toast } = useAlert()
 import ModalBox from '~/components/ModalBox.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useProjectStore } from '~/stores/projet'
-const IsActif=ref(false)
+
+const IsActif = ref(false)
+const IsTaskModalActive = ref(false)
+const currentProjectForTask = ref(null)
 const projectId = ref()
 const projects = ref([])
 const TacheByPorjectId = ref([])
 const projectStore = useProjectStore()
 
 onMounted(async () => {
-      loadProject()
+  loadProject()
 })
 
 const detailsDialog = ref(false)
 const selectedProject = ref(null)
-// Le formulaire du projet
+
 const form = ref({
   nom: "",
   dateCreation: "",
@@ -305,7 +363,62 @@ const form = ref({
   dateFin: "",
 })
 
-// Fonction d’ajout du projet
+const taskForm = ref({
+  nom: "",
+  dureeEstimee: 0,
+  dateDebut: "",
+  dateFin: "",
+})
+
+// Ouvrir la modal d'ajout de tâche
+const openAddTaskModal = (project) => {
+  currentProjectForTask.value = project
+  IsTaskModalActive.value = true
+}
+
+// Fermer la modal d'ajout de tâche
+const closeTaskModal = () => {
+  IsTaskModalActive.value = false
+  resetTaskForm()
+  currentProjectForTask.value = null
+}
+
+// Soumettre une nouvelle tâche
+async function submitTask() {
+  try {
+    const tache = {
+      nom: taskForm.value.nom,
+      dureeEstimee: taskForm.value.dureeEstimee,
+      dateDebut: new Date(taskForm.value.dateDebut),
+      dateFin: new Date(taskForm.value.dateFin),
+      projetId: currentProjectForTask.value.id
+    }
+    
+    const result = await projectStore.addTache(tache)
+    console.log("Ny result dia",result)
+    if (result.success) {
+      await loadProject()
+      closeTaskModal()
+      toast(result.message || "Tâche ajoutée avec succès", "success")
+    } else {
+      toast(result.error || "Erreur lors de l'ajout de la tâche", "error")
+    }
+
+  } catch (err) {
+    console.error(err)
+    toast("Une erreur inattendue est survenue", "error")
+  }
+}
+
+function resetTaskForm() {
+  taskForm.value = {
+    nom: "",
+    dureeEstimee: 0,
+    dateDebut: "",
+    dateFin: "",
+  }
+}
+
 async function submitProjet() {
   try {
     const user = JSON.parse(localStorage.getItem("user"))
@@ -320,18 +433,21 @@ async function submitProjet() {
     }
 
     const result = await projectStore.addProjet(projet)
-
+    
     if (result.success) {
       loadProject()
       CloseModal()
       resetForm()
+      toast(result.data.message, "success")
     } else {
-      alert("Erreur : " + result.error)
+      CloseModal()
+      resetForm()
+      toast(result.error, "info")
     }
 
   } catch (error) {
     console.error(error)
-    alert("Une erreur inattendue est survenue.")
+    alert("Une erreur inattendue est survenu")
   }
 }
 
@@ -343,14 +459,14 @@ function resetForm() {
     dateFin: "",
   }
 }
-//Total des taches sur une projets
+
 const totalTasksDuration = computed(() => {
   if (!selectedProject.value) return 0
   return selectedProject.value.tasks.reduce((sum, task) => sum + task.dureeEstime, 0)
 })
-const CloseModal=()=>{
-    IsActif.value=!IsActif.value
-    console.log(IsActif.value)
+
+const CloseModal = () => {
+  IsActif.value = !IsActif.value
 }
 
 const projectDuration = computed(() => {
@@ -376,10 +492,8 @@ const toggleDrawer = (projectId) => {
 }
 
 const viewProjectDetails = async (project) => {
-  // Récupérer les donnees depuis le backend
   const response = await projectStore.GetProjectById(project.id)
   if (response.success && response.data) {
-    console.log(response.data[0])
     selectedProject.value = {
       ...response.data[0],
       id: project.id,
@@ -393,18 +507,21 @@ const viewProjectDetails = async (project) => {
 }
 
 const deleteProject = async (projectId) => {
-    const response=await projectStore.DeleteById(projectId);
-    console.log("io aka",response)
-    if(response.success && response.statusCode=="200")
-    {
-          loadProject()
-          console.log(response.message)
+  const result = await confirm("Êtes-vous sûr de vouloir supprimer ce projet ?")
+  
+  if (result.isConfirmed) {
+    const response = await projectStore.DeleteById(projectId)
+
+    if (response.success && response.statusCode == "200") {
+      loadProject()
+      toast("Projet supprimé avec succès !", "success")
+    } else {
+      error(response.error || "Une erreur est survenue")
     }
-    else{
-      console.log(response.error)
-    }
+  }
 }
-const loadProject=async()=>{
+
+const loadProject = async () => {
   const response = await projectStore.GetIdName()
   if (response.success && response.data) {
     projects.value = response.data.map((p) => ({
@@ -417,24 +534,22 @@ const loadProject=async()=>{
       const taches = await projectStore.TacheGetProjectId(project.id)
       if (taches.success && taches.data) {
         project.tasks = taches.data
-        console.log(project.tasks)
       }
     }
   } else {
     console.error(response.error)
   }
 }
-const deleteTask =async (projectId, taskId) => {
-  const response=await projectStore.DeleteTacheById(taskId);
-    console.log("io aka",response)
-    if(response.success && response.statusCode=="200")
-    {
-          loadProject()
-          console.log(response.message)
-    }
-    else{
-      console.log(response.error)
-    }
+
+const deleteTask = async (projectId, taskId) => {
+  const response = await projectStore.DeleteTacheById(taskId)
+  
+  if (response.success && response.statusCode == "200") {
+    loadProject()
+    toast("Tâche supprimée avec succès", "success")
+  } else {
+    console.log(response.error)
+  }
 }
 </script>
 
