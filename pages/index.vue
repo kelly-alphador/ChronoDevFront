@@ -16,7 +16,7 @@
           <v-card-text class="py-4">
             <v-row align="center" no-gutters>
               <v-col cols="6">
-                <div class="text-h2 font-weight-bold text-primary">5</div>
+                <div class="text-h2 font-weight-bold text-primary">{{ Nb_project }}</div>
                 <div class="text-subtitle-1 text-medium-emphasis">Projets actifs</div>
               </v-col>
 
@@ -31,12 +31,12 @@
           <div class="d-flex py-3 justify-space-around">
             <div class="text-center">
               <v-icon color="success" size="24">mdi-check-circle</v-icon>
-              <div class="text-caption text-medium-emphasis mt-1">3 Terminés</div>
+              <div class="text-caption text-medium-emphasis mt-1">{{ Termine }} Terminés</div>
             </div>
             <v-divider vertical></v-divider>
             <div class="text-center">
               <v-icon color="warning" size="24">mdi-progress-clock</v-icon>
-              <div class="text-caption text-medium-emphasis mt-1">2 En cours</div>
+              <div class="text-caption text-medium-emphasis mt-1">{{ En_cours }} En cours</div>
             </div>
           </div>
         </v-card>
@@ -56,8 +56,8 @@
           <v-card-text class="py-4">
             <v-row align="center" no-gutters>
               <v-col cols="6">
-                <div class="text-h2 font-weight-bold text-success">7</div>
-                <div class="text-subtitle-1 text-medium-emphasis">Développeurs</div>
+                <div class="text-h2 font-weight-bold text-success">{{ userStats.totalUsers }}</div>
+                <div class="text-subtitle-1 text-medium-emphasis">Utilisateurs</div>
               </v-col>
 
               <v-col class="text-right" cols="6">
@@ -68,16 +68,32 @@
 
           <v-divider></v-divider>
 
-          <div class="d-flex py-3 justify-space-around">
-            <div class="text-center">
-              <v-icon color="info" size="24">mdi-account-check</v-icon>
-              <div class="text-caption text-medium-emphasis mt-1">6 Actifs</div>
-            </div>
-            <v-divider vertical></v-divider>
-            <div class="text-center">
-              <v-icon color="error" size="24">mdi-account-off</v-icon>
-              <div class="text-caption text-medium-emphasis mt-1">1 Inactif</div>
-            </div>
+          <div class="py-3 px-3">
+            <v-row>
+              <v-col cols="4" class="text-center">
+                <v-avatar color="blue-lighten-1" size="40" class="mb-2">
+                  <v-icon color="white" size="20">mdi-code-tags</v-icon>
+                </v-avatar>
+                <div class="text-h6 font-weight-bold text-blue-darken-2">{{ userStats.developpeurs }}</div>
+                <div class="text-caption text-medium-emphasis">Développeurs</div>
+              </v-col>
+
+              <v-col cols="4" class="text-center">
+                <v-avatar color="purple-lighten-1" size="40" class="mb-2">
+                  <v-icon color="white" size="20">mdi-account-tie</v-icon>
+                </v-avatar>
+                <div class="text-h6 font-weight-bold text-purple-darken-2">{{ userStats.managers }}</div>
+                <div class="text-caption text-medium-emphasis">Managers</div>
+              </v-col>
+
+              <v-col cols="4" class="text-center">
+                <v-avatar color="orange-lighten-1" size="40" class="mb-2">
+                  <v-icon color="white" size="20">mdi-account-star</v-icon>
+                </v-avatar>
+                <div class="text-h6 font-weight-bold text-orange-darken-2">{{ userStats.chefsProjet }}</div>
+                <div class="text-caption text-medium-emphasis">Chefs de Projet</div>
+              </v-col>
+            </v-row>
           </div>
         </v-card>
       </v-col>
@@ -353,6 +369,15 @@ const weekData = ref([]);
 const monthData = ref([]);
 const loadingWeek = ref(false);
 const loadingMonth = ref(false);
+const Nb_project = ref(0);
+const En_cours = ref(0);
+const Termine = ref(0);
+const userStats = ref({
+  totalUsers: 0,
+  developpeurs: 0,
+  managers: 0,
+  chefsProjet: 0
+});
 
 // Dates actuelles
 const currentWeekStart = ref(new Date());
@@ -518,12 +543,42 @@ async function loadMonthData(date) {
   }
 }
 
+// Chargement des données de projets
+const LoadNumberOfProject = async () => {
+  try {
+    const response = await dashboardStore.GetDataNumberOfProject();
+    Nb_project.value = response.data.total;
+    En_cours.value = response.data.enCours;
+    Termine.value = response.data.termine;
+  } catch (error) {
+    console.error('Erreur chargement projets:', error);
+  }
+};
+
+// Chargement des données utilisateurs
+const LoadNumberOfUser = async () => {
+  try {
+    const response = await dashboardStore.GetDataNumbreUser();
+    console.log("ZANY ARY", response);
+    
+    // Mise à jour des stats utilisateurs
+    userStats.value = {
+      totalUsers: response.totalUsers || 0,
+      developpeurs: response.developpeurs || 0,
+      managers: response.managers || 0,
+      chefsProjet: response.chefsProjet || 0
+    };
+  } catch (error) {
+    console.error('Erreur chargement utilisateurs:', error);
+  }
+};
+
 // Initialisation
 onMounted(async () => {
-  // Charger la semaine actuelle
+  // Charger toutes les données
+  await LoadNumberOfProject();
+  await LoadNumberOfUser();
   await loadWeekData(new Date());
-  
-  // Charger le mois actuel
   await loadMonthData(new Date());
 });
 </script>

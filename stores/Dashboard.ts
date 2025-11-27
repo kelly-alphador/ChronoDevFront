@@ -4,7 +4,15 @@ import { type HeuresSemaineDTO } from "~/types/Dashboard";
 
 export const UseDashboardStore = defineStore('Dashboard', () => {
     const config = useRuntimeConfig();
-
+    async function GetDataNumberOfProject() {
+        const response=await axios.get(`${config.public.apiBase}/api/v1/Project/count`);
+        return response.data
+      
+    }
+    async function GetDataNumbreUser() {
+        const response=await axios.get(`${config.public.apiBase}/api/Auth/nombre_user`);
+        return response.data
+    }
     async function GetDataHeurSemaine(
         dateDebut: Date | string,
         dateFin: Date | string
@@ -52,5 +60,5 @@ export const UseDashboardStore = defineStore('Dashboard', () => {
         }
     }
 
-    return { GetDataHeurSemaine , GetDataHeurMois};
+    return { GetDataHeurSemaine , GetDataHeurMois , GetDataNumberOfProject , GetDataNumbreUser};
 });
