@@ -36,9 +36,35 @@ export const UseDashboardStore = defineStore('Dashboard', () => {
             return [];
         }
     }
+    async function GetDataHoursByWeekUser(
+        utilisateurId:number,
+        dateDebut: Date | string,
+        dateFin: Date | string
+    ): Promise<HeuresSemaineDTO[]> {
+
+        try {
+            const response = await axios.get(
+                `${config.public.apiBase}/api/v1/saisies-temps/heures-semaine-by-user`,
+                {
+                    params: {
+                        utilisateurId:utilisateurId,
+                        debut: dateDebut,
+                        fin: dateFin
+                    }
+                }
+            );
+
+            return response.data as HeuresSemaineDTO[];
+        }
+        catch (error: any) {
+            console.log("error", error);
+            return [];
+        }
+    }
     async function GetDataHeurMois(
         annee: string,
-        mois: string
+        mois: string,
+        utilisateurId:number
     ): Promise<HeuresSemaineDTO[]> {
 
         try {
@@ -46,6 +72,31 @@ export const UseDashboardStore = defineStore('Dashboard', () => {
                 `${config.public.apiBase}/api/v1/saisies-temps/heures-par-mois`,
                 {
                     params: {
+                        annee: annee,
+                        mois: mois,
+                    }
+                }
+            );
+
+            return response.data as HeuresSemaineDTO[];
+        }
+        catch (error: any) {
+            console.log("error", error);
+            return [];
+        }
+    }
+     async function GetDataHoursByMothAndUser(
+        utilisateurId:number,
+        annee: string,
+        mois: string
+    ): Promise<HeuresSemaineDTO[]> {
+
+        try {
+            const response = await axios.get(
+                `${config.public.apiBase}/api/v1/saisies-temps/heures-par-mois-By-User`,
+                {
+                    params: {
+                        utilisateurId:utilisateurId,
                         annee: annee,
                         mois: mois
                     }
@@ -60,5 +111,5 @@ export const UseDashboardStore = defineStore('Dashboard', () => {
         }
     }
 
-    return { GetDataHeurSemaine , GetDataHeurMois , GetDataNumberOfProject , GetDataNumbreUser};
+    return { GetDataHeurSemaine , GetDataHeurMois , GetDataNumberOfProject ,GetDataHoursByWeekUser, GetDataNumbreUser, GetDataHoursByMothAndUser};
 });

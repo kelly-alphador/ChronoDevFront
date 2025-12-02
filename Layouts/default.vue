@@ -56,7 +56,15 @@
           rounded="xl"
           class="mx-2 mb-1"
         ></v-list-item>
-
+          <v-list-item
+          prepend-icon="mdi-view-dashboard"
+          title="Tableau de bord"
+          to="/Dashboard"
+          value="dashboard"
+          color="primary"
+          rounded="xl"
+          class="mx-2 mb-1"
+        ></v-list-item>
         <v-list-item
           prepend-icon="mdi-account-multiple"
           title="Utilisateurs"
