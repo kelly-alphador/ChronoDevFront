@@ -44,5 +44,13 @@ export const UseCalendarStore = defineStore('Calendar', () => {
         throw error;
       }
     }
-  return { GetProject, GetTachesByProjectId,createSaisieTemps};
+    //select saisiede temps par nom developpeur
+    // Dans votre store Calendar
+    async function GetSaisiesTemps(username: string) {
+      const response = await axios.get(
+        `${config.public.apiBase}/api/v1/saisies-temps/developpeur?username=${username}`
+      );
+      return response.data.data;
+    }
+  return { GetProject, GetTachesByProjectId,createSaisieTemps,GetSaisiesTemps};
 });

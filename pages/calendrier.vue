@@ -152,6 +152,37 @@ const CalendarStore = UseCalendarStore();
 const UserId=ref(0);
 
 const projects = ref<Projet[]>([]);
+const username = ref('');
+
+//Récupérer le nom d'utilisateur depuis localStorage
+const getUserFromLocalStorage = () => {
+  const user = localStorage.getItem("user");
+  if (user) {
+    const userJson = JSON.parse(user);
+    username.value = userJson.nom || '';
+    UserId.value = userJson.id;
+  }
+};
+//Récupérer les saisies temps depuis le backend
+const loadSaisiesTemps = async () => {
+  if (!username.value) return;
+  
+  try {
+    const saisies = await CalendarStore.GetSaisiesTemps(username.value);
+    
+    // Transformer les données backend en événements calendrier
+    events.value = saisies.map((saisie: any) => ({
+      start: `${saisie.dateSaisie.split('T')[0]} ${saisie.heureDebut.substring(0, 5)}`,
+      end: `${saisie.dateSaisie.split('T')[0]} ${saisie.heureFin.substring(0, 5)}`,
+      title: saisie.tacheNom,
+      content: saisie.commentaire,
+      class: 'leisure'
+    }));
+  } catch (error) {
+    console.error('Erreur lors du chargement des saisies temps:', error);
+  }
+};
+
 //methode recuperer les projets
 const GetProject = async () => {
   const reponse = await CalendarStore.GetProject();
@@ -160,7 +191,8 @@ const GetProject = async () => {
 
 onMounted(async () => {
   await GetProject();
- 
+  await getUserFromLocalStorage();
+  await loadSaisiesTemps();
 });
 // Types
 interface Projet {
