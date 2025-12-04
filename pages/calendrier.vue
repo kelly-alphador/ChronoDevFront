@@ -149,18 +149,18 @@ import { ref,onMounted } from 'vue'
 import VueCal from 'vue-cal'
 import { UseCalendarStore } from '~/stores/calendar'
 const CalendarStore = UseCalendarStore();
-
+const UserId=ref(0);
 
 const projects = ref<Projet[]>([]);
 //methode recuperer les projets
 const GetProject = async () => {
   const reponse = await CalendarStore.GetProject();
-  projects.value = reponse;      
-  console.log(projects.value);     
+  projects.value = reponse;          
 };
 
 onMounted(async () => {
   await GetProject();
+ 
 });
 // Types
 interface Projet {
@@ -193,8 +193,9 @@ const formData = ref({
   statut: '',
   tacheId: '' as number | string,
   projetId: '' as number | string,
-  utilisateurId: 1
+  utilisateurId: ''as number | string
 })
+//Recuperer l'id de l'utilisateur en localstorage
 
 //  Charger les tâches en fonction du projet sélectionné
 const loadTachesByProjet = async () => {
@@ -222,6 +223,7 @@ const taches = ref<Tache[]>([])
 
 // Gestion du clic sur une cellule du calendrier
 const onCellClick = (date: Date, event: any) => {
+  console.log("je suis cliquer");
   // Formatter la date au format YYYY-MM-DD
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -236,7 +238,16 @@ const onCellClick = (date: Date, event: any) => {
   endDate.setHours(endDate.getHours() + 1)
   const endHours = String(endDate.getHours()).padStart(2, '0')
   const endMinutes = String(endDate.getMinutes()).padStart(2, '0')
-
+  //Recuperer l'Id de l'user
+   const user=localStorage.getItem("user");
+  if(user==null)
+  { 
+      console.log("aucun donnees");
+  }
+  else{
+    const UserJson=JSON.parse(user);
+    UserId.value=UserJson.id;
+  }
   // Remplir le formulaire avec les données du clic
   formData.value = {
     dateSaisie: `${year}-${month}-${day}`,
@@ -246,7 +257,7 @@ const onCellClick = (date: Date, event: any) => {
     statut: '',
     tacheId: '',
     projetId: '',
-    utilisateurId: 1
+    utilisateurId: UserId.value
   }
 
   // Réinitialiser les tâches
@@ -266,12 +277,16 @@ const handleSubmit = async () => {
     alert('L\'heure de fin doit être après l\'heure de début')
     return
   }
+  const formDataToSend = {
+  ...formData.value,
+  heure_deb: formData.value.heure_deb + ":00",
+  heure_fin: formData.value.heure_fin + ":00"
+  };
 
-  // Ici, faire l'appel API pour créer l'événement
-  // En production :
-  // await axios.post('/api/evenements', formData.value)
 
   // Ajouter l'événement au calendrier (simulation)
+  const response=CalendarStore.createSaisieTemps(formDataToSend);
+  console.log("IO RESPONSE ZAO",response);
   const tacheSelectionnee = taches.value.find(t => t.id === Number(formData.value.tacheId))
   events.value.push({
     start: `${formData.value.dateSaisie} ${formData.value.heure_deb}`,

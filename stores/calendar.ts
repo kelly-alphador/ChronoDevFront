@@ -22,7 +22,7 @@ export const UseCalendarStore = defineStore('Calendar', () => {
     const response = await axios.get(`${config.public.apiBase}/api/V1/Project`);
     return response.data.data;
   }
-
+  
   //  méthode pour récupérer les tâches par projet
   async function GetTachesByProjectId(projectId: number): Promise<Tache[]> {
     const response = await axios.get(
@@ -30,6 +30,19 @@ export const UseCalendarStore = defineStore('Calendar', () => {
     );
     return response.data.data;
   }
+  //Ajout de saisieTemps
+     async function createSaisieTemps(payload: any) {
+      try {
+        const response = await axios.post(
+          `${config.public.apiBase}/api/V1/saisies-temps`,
+          payload
+        );
 
-  return { GetProject, GetTachesByProjectId };
+        return response.data;
+      } catch (error) {
+        console.error("Erreur API :", error);
+        throw error;
+      }
+    }
+  return { GetProject, GetTachesByProjectId,createSaisieTemps};
 });
