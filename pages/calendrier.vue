@@ -14,12 +14,43 @@
         :disable-views="['years', 'year']"
         default-view="week"
         locale="fr"
-        :editable-events="{ title: false, drag: true, resize: true, delete: false, create: false }"
+       
         :snap-to-time="15"
         @event-drop="onEventDrop"
         @event-duration-change="onEventResize"
         @cell-click="onCellClick"
-      />
+      >
+        <!-- SLOT POUR PERSONNALISER L'ÉVÉNEMENT -->
+        <template #event="{ event }">
+          <div
+            class="event-item"
+            @mouseenter="hoveredEventId = event.id"
+            @mouseleave="hoveredEventId = null"
+          >
+            <div class="event-content-wrapper">
+              <div class="event-header">
+                <strong class="event-title">{{ event.title }}</strong>
+                <span class="event-time">
+                  {{ formatTime(event.start) }} - {{ formatTime(event.end) }}
+                </span>
+              </div>
+              <div v-if="event.content" class="event-description">
+                {{ event.content }}
+              </div>
+            </div>
+            
+            <!-- Bouton X au survol -->
+            <button
+              v-if="hoveredEventId === event.id"
+              class="delete-btn"
+              @click.stop="deleteEvent(event)"
+              title="Supprimer"
+            >
+              ×
+            </button>
+          </div>
+        </template>
+      </VueCal>
     </ClientOnly>
 
     <!-- Modal de formulaire -->
@@ -62,7 +93,7 @@
               />
             </div>
           </div>
-          <!-- SELECT PROJET  -->
+
           <div class="form-group">
             <label>Projet *</label>
             <select 
@@ -73,13 +104,11 @@
             >
               <option value="">-- Sélectionner un projet --</option>
               <option v-for="projet in projects" :key="projet.id" :value="projet.id">
-                  {{ projet.nom }}
+                {{ projet.nom }}
               </option>
-
             </select>
           </div>
 
-             <!-- SELECT TÂCHES (dépend du projet) -->
           <div class="form-group">
             <label>Tâche *</label>
             <select 
@@ -145,55 +174,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref,onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import VueCal from 'vue-cal'
 import { UseCalendarStore } from '~/stores/calendar'
-const CalendarStore = UseCalendarStore();
-const UserId=ref(0);
 
-const projects = ref<Projet[]>([]);
-const username = ref('');
+const CalendarStore = UseCalendarStore()
+const UserId = ref(0)
+const projects = ref<Projet[]>([])
+const username = ref('')
+const hoveredEventId = ref<number | null>(null)
 
-//Récupérer le nom d'utilisateur depuis localStorage
-const getUserFromLocalStorage = () => {
-  const user = localStorage.getItem("user");
-  if (user) {
-    const userJson = JSON.parse(user);
-    username.value = userJson.nom || '';
-    UserId.value = userJson.id;
-  }
-};
-//Récupérer les saisies temps depuis le backend
-const loadSaisiesTemps = async () => {
-  if (!username.value) return;
-  
-  try {
-    const saisies = await CalendarStore.GetSaisiesTemps(username.value);
-    
-    // Transformer les données backend en événements calendrier
-    events.value = saisies.map((saisie: any) => ({
-      start: `${saisie.dateSaisie.split('T')[0]} ${saisie.heureDebut.substring(0, 5)}`,
-      end: `${saisie.dateSaisie.split('T')[0]} ${saisie.heureFin.substring(0, 5)}`,
-      title: saisie.tacheNom,
-      content: saisie.commentaire,
-      class: 'leisure'
-    }));
-  } catch (error) {
-    console.error('Erreur lors du chargement des saisies temps:', error);
-  }
-};
-
-//methode recuperer les projets
-const GetProject = async () => {
-  const reponse = await CalendarStore.GetProject();
-  projects.value = reponse;          
-};
-
-onMounted(async () => {
-  await GetProject();
-  await getUserFromLocalStorage();
-  await loadSaisiesTemps();
-});
 // Types
 interface Projet {
   id: number
@@ -206,13 +196,17 @@ interface Tache {
   projetId: number
 }
 
-// États
-const events = ref([
-  { start: '2025-11-10 10:00', end: '2025-11-10 12:00', title: 'Dr. John', content: 'Consultation', class: 'leisure' },
-  { start: '2025-11-11 14:00', end: '2025-11-11 16:00', title: 'Dr. Kate', content: 'Réunion', class: 'health' },
-  { start: '2025-11-12 09:00', end: '2025-11-12 11:00', title: 'Dr. John', content: 'Formation', class: 'sport' }
-])
+interface CalendarEvent {
+  id?: number
+  start: string
+  end: string
+  title: string
+  content?: string
+  class?: string
+}
 
+// États
+const events = ref<CalendarEvent[]>([])
 const vuecal = ref<any>(null)
 const showModal = ref(false)
 
@@ -225,62 +219,123 @@ const formData = ref({
   statut: '',
   tacheId: '' as number | string,
   projetId: '' as number | string,
-  utilisateurId: ''as number | string
+  utilisateurId: '' as number | string
 })
-//Recuperer l'id de l'utilisateur en localstorage
-
-//  Charger les tâches en fonction du projet sélectionné
-const loadTachesByProjet = async () => {
-  const projetId = formData.value.projetId;
-  
-  if (!projetId) {
-    taches.value = [];
-    formData.value.tacheId = '';
-    return;
-  }
-
-  try {
-    // Appel API réel via le store
-    const response = await CalendarStore.GetTachesByProjectId(Number(projetId));
-    taches.value = response;
-    formData.value.tacheId = ''; // Réinitialiser la sélection de tâche
-    console.log('Tâches du projet', projetId, ':', taches.value);
-  } catch (error) {
-    console.error('Erreur lors du chargement des tâches:', error);
-    taches.value = [];
-  }
-};
 
 const taches = ref<Tache[]>([])
 
+// Fonction pour formater l'heure (HH:MM)
+const formatTime = (dateTimeString: string) => {
+  const date = new Date(dateTimeString)
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
+}
+
+// Fonction de suppression
+const deleteEvent = async (event: any) => {
+
+  try {
+    // Appel API pour supprimer
+    const response = await CalendarStore.deleteSaisieTemps(event.id)
+    
+    // Vérifier le succès de la suppression
+    if (response.success) {
+      // Retirer l'événement de la liste
+      events.value = events.value.filter((e: any) => e.id !== event.id)
+      console.log(response.message)
+    } else {
+      throw new Error('Échec de la suppression')
+    }
+  } catch (error) {
+    console.error('Erreur lors de la suppression:', error)
+  }
+}
+
+// Récupérer le nom d'utilisateur depuis localStorage
+const getUserFromLocalStorage = () => {
+  const user = localStorage.getItem("user")
+  if (user) {
+    const userJson = JSON.parse(user)
+    username.value = userJson.nom || ''
+    UserId.value = userJson.id
+  }
+}
+
+// Récupérer les saisies temps depuis le backend
+const loadSaisiesTemps = async () => {
+  if (!username.value) return
+  
+  try {
+    const saisies = await CalendarStore.GetSaisiesTemps(username.value)
+    
+    // Transformer les données backend en événements calendrier
+    events.value = saisies.map((saisie: any) => ({
+      id: saisie.id, // IMPORTANT: ajouter l'ID
+      start: `${saisie.dateSaisie.split('T')[0]} ${saisie.heureDebut.substring(0, 5)}`,
+      end: `${saisie.dateSaisie.split('T')[0]} ${saisie.heureFin.substring(0, 5)}`,
+      title: saisie.tacheNom,
+      content: saisie.commentaire,
+      class: 'leisure'
+    }))
+  } catch (error) {
+    console.error('Erreur lors du chargement des saisies temps:', error)
+  }
+}
+
+// Méthode récupérer les projets
+const GetProject = async () => {
+  const reponse = await CalendarStore.GetProject()
+  projects.value = reponse
+}
+
+onMounted(async () => {
+  await GetProject()
+  await getUserFromLocalStorage()
+  await loadSaisiesTemps()
+})
+
+// Charger les tâches en fonction du projet sélectionné
+const loadTachesByProjet = async () => {
+  const projetId = formData.value.projetId
+  
+  if (!projetId) {
+    taches.value = []
+    formData.value.tacheId = ''
+    return
+  }
+
+  try {
+    const response = await CalendarStore.GetTachesByProjectId(Number(projetId))
+    taches.value = response
+    formData.value.tacheId = ''
+    console.log('Tâches du projet', projetId, ':', taches.value)
+  } catch (error) {
+    console.error('Erreur lors du chargement des tâches:', error)
+    taches.value = []
+  }
+}
+
 // Gestion du clic sur une cellule du calendrier
 const onCellClick = (date: Date, event: any) => {
-  console.log("je suis cliquer");
-  // Formatter la date au format YYYY-MM-DD
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   
-  // Formatter l'heure au format HH:MM
   const hours = String(date.getHours()).padStart(2, '0')
   const minutes = String(date.getMinutes()).padStart(2, '0')
   
-  // Calculer l'heure de fin (1 heure après par défaut)
   const endDate = new Date(date)
   endDate.setHours(endDate.getHours() + 1)
   const endHours = String(endDate.getHours()).padStart(2, '0')
   const endMinutes = String(endDate.getMinutes()).padStart(2, '0')
-  //Recuperer l'Id de l'user
-   const user=localStorage.getItem("user");
-  if(user==null)
-  { 
-      console.log("aucun donnees");
+  
+  const user = localStorage.getItem("user")
+  if (user) {
+    const UserJson = JSON.parse(user)
+    UserId.value = UserJson.id
   }
-  else{
-    const UserJson=JSON.parse(user);
-    UserId.value=UserJson.id;
-  }
-  // Remplir le formulaire avec les données du clic
+  
   formData.value = {
     dateSaisie: `${year}-${month}-${day}`,
     heure_deb: `${hours}:${minutes}`,
@@ -292,35 +347,28 @@ const onCellClick = (date: Date, event: any) => {
     utilisateurId: UserId.value
   }
 
-  // Réinitialiser les tâches
   taches.value = []
-
-  // Afficher le modal
   showModal.value = true
 }
 
-
 // Soumettre le formulaire
 const handleSubmit = async () => {
-  console.log('Nouvelle entrée à créer:', formData.value)
-  
-  // Validation
   if (formData.value.heure_fin <= formData.value.heure_deb) {
     alert('L\'heure de fin doit être après l\'heure de début')
     return
   }
+  
   const formDataToSend = {
-  ...formData.value,
-  heure_deb: formData.value.heure_deb + ":00",
-  heure_fin: formData.value.heure_fin + ":00"
-  };
+    ...formData.value,
+    heure_deb: formData.value.heure_deb + ":00",
+    heure_fin: formData.value.heure_fin + ":00"
+  }
 
-
-  // Ajouter l'événement au calendrier (simulation)
-  const response=CalendarStore.createSaisieTemps(formDataToSend);
-  console.log("IO RESPONSE ZAO",response);
+  const response = await CalendarStore.createSaisieTemps(formDataToSend)
+  
   const tacheSelectionnee = taches.value.find(t => t.id === Number(formData.value.tacheId))
   events.value.push({
+    id: response.id, // ID retourné par le backend
     start: `${formData.value.dateSaisie} ${formData.value.heure_deb}`,
     end: `${formData.value.dateSaisie} ${formData.value.heure_fin}`,
     title: tacheSelectionnee?.nom || 'Nouvelle tâche',
@@ -328,7 +376,6 @@ const handleSubmit = async () => {
     class: 'leisure'
   })
 
-  // Fermer le modal
   closeModal()
 }
 
@@ -337,7 +384,7 @@ const closeModal = () => {
   showModal.value = false
 }
 
-// Gestion du déplacement d'événement
+/* Gestion du déplacement d'événement
 const onEventDrop = (event: any, originalEvent: any) => {
   console.log('Événement déplacé:', { 
     titre: event.title, 
@@ -354,7 +401,7 @@ const onEventResize = (event: any, originalEvent: any) => {
     nouvelleDurée: `${event.start} - ${event.end}` 
   })
 }
-
+*/
 // Fonction Soumettre
 const onSubmit = () => {
   console.log('Événements actuels à soumettre:', events.value)
@@ -391,6 +438,87 @@ const onSubmit = () => {
 
 .submit-btn:hover {
   background-color: #369870;
+}
+
+/* Style personnalisé pour les événements */
+.event-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 6px 8px;
+  height: 100%;
+  width: 100%;
+  gap: 8px;
+}
+
+.event-content-wrapper {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.event-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.event-title {
+  font-weight: 600;
+  font-size: 0.9em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.event-time {
+  font-size: 0.75em;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.event-description {
+  font-size: 0.8em;
+  opacity: 0.85;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.delete-btn {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.delete-btn:hover {
+  background-color: #e74c3c;
+  color: white;
+  transform: scale(1.15);
 }
 
 .vuecal__event.leisure {

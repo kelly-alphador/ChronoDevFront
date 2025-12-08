@@ -30,6 +30,28 @@ export const UseCalendarStore = defineStore('Calendar', () => {
     );
     return response.data.data;
   }
+ 
+      //Delete Saisie de temps
+      async function deleteSaisieTemps(id: number) {
+        try {
+          const response = await fetch(`https://localhost:44370/api/v1/saisies-temps/${id}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error('Erreur lors de la suppression');
+          }
+          
+          const data = await response.json();
+          return data; // Retourne { statusCode: 200, success: true, message: "...", data: null }
+        } catch (error) {
+          console.error('Erreur lors de la suppression de la saisie temps:', error);
+          throw error;
+        }
+      }
   //Ajout de saisieTemps
      async function createSaisieTemps(payload: any) {
       try {
@@ -52,5 +74,5 @@ export const UseCalendarStore = defineStore('Calendar', () => {
       );
       return response.data.data;
     }
-  return { GetProject, GetTachesByProjectId,createSaisieTemps,GetSaisiesTemps};
+  return { GetProject, GetTachesByProjectId,createSaisieTemps,GetSaisiesTemps,deleteSaisieTemps};
 });
