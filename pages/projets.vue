@@ -340,6 +340,31 @@ const { success, error, confirm, toast } = useAlert()
 import ModalBox from '~/components/ModalBox.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useProjectStore } from '~/stores/projet'
+import { useAuthStore } from '~/stores/auth'
+
+definePageMeta({
+  middleware: 'auth',
+  meta: {
+    requiresAuth: true
+  }
+})
+
+const authStore = useAuthStore()
+
+// Déterminer le layout en fonction du rôle
+const currentLayout = computed(() => {
+  const userRole = authStore.user?.role?.toLowerCase()
+  
+  if (userRole === 'chefprojet') return 'projet'
+  if (userRole === 'manager') return 'admin'
+  
+  return 'auth'
+})
+// Appliquer le layout dynamiquement
+watch(currentLayout, (newLayout) => {
+  setPageLayout(newLayout)
+}, { immediate: true })
+const dashboardStore = UseDashboardStore();
 
 const IsActif = ref(false)
 const IsTaskModalActive = ref(false)
@@ -409,7 +434,7 @@ async function submitTask() {
     toast("Une erreur inattendue est survenue", "error")
   }
 }
-
+//renitialiser le formulaire 
 function resetTaskForm() {
   taskForm.value = {
     nom: "",
@@ -418,7 +443,7 @@ function resetTaskForm() {
     dateFin: "",
   }
 }
-
+//creation d'un projet
 async function submitProjet() {
   try {
     const user = JSON.parse(localStorage.getItem("user"))

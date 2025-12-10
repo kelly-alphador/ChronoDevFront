@@ -76,11 +76,22 @@ const handleLogin = async () => {
   const result = await authStore.login(email.value, password.value)
 
   if (result.success) {
-    router.push('/')
-    console.log("je suis aller a homme")
+    const userRole=authStore.user?.role
+    if(userRole=="Manager")
+    {
+        router.push("/")
+    }
+    if(userRole=="ChefProjet")
+    {
+        router.push("/dashboard")
+    }
+    if(userRole=="Developpeur")
+    {
+      router.push("/dashboard")
+    }
   } else {
     error.value = result.error
-    console.log("Error zao fagany")
+   
   }
 
   loading.value = false

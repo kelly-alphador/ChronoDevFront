@@ -7,7 +7,7 @@
       <v-col cols="6">
         <v-card elevation="3" class="rounded-lg">
           <v-card-item>
-            <template v-slot:prepend>
+            <template v-slot:prepend>6
               <v-avatar color="primary" size="56">
                 <v-icon size="32" color="white">mdi-calendar-week</v-icon>
               </v-avatar>
@@ -234,15 +234,32 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import auth from '~/middleware/auth';
 import { UseDashboardStore } from '~/stores/Dashboard';
+import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
   middleware: 'auth',
   meta: {
     requiresAuth: true
   }
-});
+})
 
+const authStore = useAuthStore()
+
+// Déterminer le layout en fonction du rôle
+const currentLayout = computed(() => {
+  const userRole = authStore.user?.role?.toLowerCase()
+  
+  if (userRole === 'chefprojet') return 'projet'
+  if (userRole === 'developpeur') return 'developper'
+  
+  return 'auth'
+})
+// Appliquer le layout dynamiquement
+watch(currentLayout, (newLayout) => {
+  setPageLayout(newLayout)
+}, { immediate: true })
 const dashboardStore = UseDashboardStore();
 
 // États

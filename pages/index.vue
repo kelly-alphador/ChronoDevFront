@@ -357,6 +357,7 @@ import { UseDashboardStore } from '~/stores/Dashboard';
 
 definePageMeta({
   middleware: 'auth',
+  layout:'admin',
   meta: {
     requiresAuth: true
   }

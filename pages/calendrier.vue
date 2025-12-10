@@ -14,10 +14,7 @@
         :disable-views="['years', 'year']"
         default-view="week"
         locale="fr"
-       
         :snap-to-time="15"
-        @event-drop="onEventDrop"
-        @event-duration-change="onEventResize"
         @cell-click="onCellClick"
       >
         <!-- SLOT POUR PERSONNALISER L'ÉVÉNEMENT -->
@@ -177,6 +174,30 @@
 import { ref, onMounted } from 'vue'
 import VueCal from 'vue-cal'
 import { UseCalendarStore } from '~/stores/calendar'
+import { useAuthStore } from '~/stores/auth'
+
+definePageMeta({
+  middleware: 'auth',
+  meta: {
+    requiresAuth: true
+  }
+})
+
+const authStore = useAuthStore()
+
+// Déterminer le layout en fonction du rôle
+const currentLayout = computed(() => {
+  const userRole = authStore.user?.role?.toLowerCase()
+  
+  if (userRole === 'chefprojet') return 'projet'
+  if (userRole === 'developpeur') return 'developper'
+  
+  return 'auth'
+})
+// Appliquer le layout dynamiquement
+watch(currentLayout, (newLayout) => {
+  setPageLayout(newLayout)
+}, { immediate: true })
 
 const CalendarStore = UseCalendarStore()
 const UserId = ref(0)

@@ -152,6 +152,30 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useAuthStore } from '~/stores/auth'
+
+definePageMeta({
+  middleware: 'auth',
+  meta: {
+    requiresAuth: true
+  }
+})
+
+const authStore = useAuthStore()
+
+// Déterminer le layout en fonction du rôle
+const currentLayout = computed(() => {
+  const userRole = authStore.user?.role?.toLowerCase()
+  console.log("MON ROLE EST",userRole)
+  if (userRole === 'chefprojet') return 'projet'
+  if (userRole === 'manager') return 'admin'
+  
+  return 'auth'
+})
+// Appliquer le layout dynamiquement
+watch(currentLayout, (newLayout) => {
+  setPageLayout(newLayout)
+}, { immediate: true })
 
 const cars = [
   {
