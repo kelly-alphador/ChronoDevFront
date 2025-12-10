@@ -143,7 +143,7 @@
     import { ref } from 'vue';
 import auth from '~/middleware/auth';
     const authStore=useAuthStore()
-    const drawer=ref(false);
+    const drawer=ref(true);
     const UserName=computed(()=>{
         if(authStore.user && authStore.user.nom && authStore.user.prenom)
         {

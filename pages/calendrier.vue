@@ -50,123 +50,112 @@
       </VueCal>
     </ClientOnly>
 
-    <!-- Modal de formulaire -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Ajouter un événement</h3>
-          <button class="close-btn" @click="closeModal">&times;</button>
+    <!-- Modal de formulaire avec style ModalBox -->
+    <ModalBox title="Ajouter un événement" v-if="showModal" @close="closeModal">
+      <form class="form-projet" @submit.prevent="handleSubmit">
+        <div class="form-group">
+          <label for="dateSaisie">Date de saisie</label>
+          <input 
+            v-model="formData.dateSaisie" 
+            type="date" 
+            id="dateSaisie"
+            readonly
+          />
         </div>
 
-        <form @submit.prevent="handleSubmit" class="event-form">
+        <div class="form-row">
           <div class="form-group">
-            <label>Date de saisie</label>
+            <label for="heure_deb">Heure début *</label>
             <input 
-              v-model="formData.dateSaisie" 
-              type="date" 
-              readonly
-              class="form-input"
+              v-model="formData.heure_deb" 
+              type="time" 
+              id="heure_deb"
+              required
             />
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label>Heure début *</label>
-              <input 
-                v-model="formData.heure_deb" 
-                type="time" 
-                required
-                class="form-input"
-              />
-            </div>
-
-            <div class="form-group">
-              <label>Heure fin *</label>
-              <input 
-                v-model="formData.heure_fin" 
-                type="time" 
-                required
-                class="form-input"
-              />
-            </div>
-          </div>
-
           <div class="form-group">
-            <label>Projet *</label>
-            <select 
-              v-model="formData.projetId" 
-              @change="loadTachesByProjet"
-              required
-              class="form-input"
-            >
-              <option value="">-- Sélectionner un projet --</option>
-              <option v-for="projet in projects" :key="projet.id" :value="projet.id">
-                {{ projet.nom }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Tâche *</label>
-            <select 
-              v-model="formData.tacheId" 
-              required
-              :disabled="!formData.projetId || taches.length === 0"
-              class="form-input"
-            >
-              <option value="">-- Sélectionner une tâche --</option>
-              <option v-for="tache in taches" :key="tache.id" :value="tache.id">
-                {{ tache.nom }}
-              </option>
-            </select>
-            <small v-if="formData.projetId && taches.length === 0" class="form-hint">
-              Aucune tâche disponible pour ce projet
-            </small>
-          </div>
-
-          <div class="form-group">
-            <label>Commentaire</label>
-            <textarea 
-              v-model="formData.commentaire" 
-              rows="3"
-              class="form-input"
-              placeholder="Ajouter un commentaire..."
-            ></textarea>
-          </div>
-
-          <div class="form-group">
-            <label>Statut *</label>
-            <select v-model="formData.statut" required class="form-input">
-              <option value="">-- Sélectionner un statut --</option>
-              <option value="En attente">En attente</option>
-              <option value="En cours">En cours</option>
-              <option value="Terminé">Terminé</option>
-              <option value="Annulé">Annulé</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Utilisateur ID *</label>
+            <label for="heure_fin">Heure fin *</label>
             <input 
-              v-model.number="formData.utilisateurId" 
-              type="number" 
+              v-model="formData.heure_fin" 
+              type="time" 
+              id="heure_fin"
               required
-              class="form-input"
-              placeholder="ID de l'utilisateur"
             />
           </div>
+        </div>
 
-          <div class="form-actions">
-            <button type="button" @click="closeModal" class="btn-cancel">
-              Annuler
-            </button>
-            <button type="submit" class="btn-submit">
-              Ajouter
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div class="form-group">
+          <label for="projetId">Projet *</label>
+          <select 
+            v-model="formData.projetId" 
+            id="projetId"
+            @change="loadTachesByProjet"
+            required
+          >
+            <option value="">-- Sélectionner un projet --</option>
+            <option v-for="projet in projects" :key="projet.id" :value="projet.id">
+              {{ projet.nom }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="tacheId">Tâche *</label>
+          <select 
+            v-model="formData.tacheId" 
+            id="tacheId"
+            required
+            :disabled="!formData.projetId || taches.length === 0"
+          >
+            <option value="">-- Sélectionner une tâche --</option>
+            <option v-for="tache in taches" :key="tache.id" :value="tache.id">
+              {{ tache.nom }}
+            </option>
+          </select>
+          <small v-if="formData.projetId && taches.length === 0" class="form-hint">
+            Aucune tâche disponible pour ce projet
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="commentaire">Commentaire</label>
+          <textarea 
+            v-model="formData.commentaire" 
+            id="commentaire"
+            rows="3"
+            placeholder="Ajouter un commentaire..."
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="statut">Statut *</label>
+          <select v-model="formData.statut" id="statut" required>
+            <option value="">-- Sélectionner un statut --</option>
+            <option value="En attente">En attente</option>
+            <option value="En cours">En cours</option>
+            <option value="Terminé">Terminé</option>
+            <option value="Annulé">Annulé</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="utilisateurId">Utilisateur ID *</label>
+          <input 
+            v-model.number="formData.utilisateurId" 
+            type="number" 
+            id="utilisateurId"
+            required
+            placeholder="ID de l'utilisateur"
+          />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Ajouter</button>
+          <button type="button" class="btn-secondary" @click="closeModal">Annuler</button>
+        </div>
+      </form>
+    </ModalBox>
   </div>
 </template>
 
@@ -175,6 +164,10 @@ import { ref, onMounted } from 'vue'
 import VueCal from 'vue-cal'
 import { UseCalendarStore } from '~/stores/calendar'
 import { useAuthStore } from '~/stores/auth'
+import { useAlert } from "@/composables/useAlert"
+import ModalBox from '~/components/ModalBox.vue'
+
+const { success, error, confirm, toast } = useAlert()
 
 definePageMeta({
   middleware: 'auth',
@@ -253,23 +246,24 @@ const formatTime = (dateTimeString: string) => {
   return `${hours}:${minutes}`
 }
 
-// Fonction de suppression
+// Fonction de suppression avec Sweet Alert
 const deleteEvent = async (event: any) => {
-
-  try {
-    // Appel API pour supprimer
-    const response = await CalendarStore.deleteSaisieTemps(event.id)
-    
-    // Vérifier le succès de la suppression
-    if (response.success) {
-      // Retirer l'événement de la liste
-      events.value = events.value.filter((e: any) => e.id !== event.id)
-      console.log(response.message)
-    } else {
-      throw new Error('Échec de la suppression')
+  const result = await confirm("Êtes-vous sûr de vouloir supprimer cette saisie de temps ?")
+  console.log(event)
+  if (result.isConfirmed) {
+    try {
+      const response = await CalendarStore.deleteSaisieTemps(event.id)
+      
+      if (response.success) {
+        events.value = events.value.filter((e: any) => e.id !== event.id)
+        toast("Saisie de temps supprimée avec succès !", "success")
+      } else {
+        error(response.error || "Échec de la suppression")
+      }
+    } catch (err) {
+      console.error('Erreur lors de la suppression:', err)
+      error("Une erreur est survenue lors de la suppression")
     }
-  } catch (error) {
-    console.error('Erreur lors de la suppression:', error)
   }
 }
 
@@ -290,17 +284,16 @@ const loadSaisiesTemps = async () => {
   try {
     const saisies = await CalendarStore.GetSaisiesTemps(username.value)
     
-    // Transformer les données backend en événements calendrier
     events.value = saisies.map((saisie: any) => ({
-      id: saisie.id, // IMPORTANT: ajouter l'ID
+      id: saisie.id,
       start: `${saisie.dateSaisie.split('T')[0]} ${saisie.heureDebut.substring(0, 5)}`,
       end: `${saisie.dateSaisie.split('T')[0]} ${saisie.heureFin.substring(0, 5)}`,
       title: saisie.tacheNom,
       content: saisie.commentaire,
       class: 'leisure'
     }))
-  } catch (error) {
-    console.error('Erreur lors du chargement des saisies temps:', error)
+  } catch (err) {
+    console.error('Erreur lors du chargement des saisies temps:', err)
   }
 }
 
@@ -330,9 +323,8 @@ const loadTachesByProjet = async () => {
     const response = await CalendarStore.GetTachesByProjectId(Number(projetId))
     taches.value = response
     formData.value.tacheId = ''
-    console.log('Tâches du projet', projetId, ':', taches.value)
-  } catch (error) {
-    console.error('Erreur lors du chargement des tâches:', error)
+  } catch (err) {
+    console.error('Erreur lors du chargement des tâches:', err)
     taches.value = []
   }
 }
@@ -372,32 +364,42 @@ const onCellClick = (date: Date, event: any) => {
   showModal.value = true
 }
 
-// Soumettre le formulaire
+// Soumettre le formulaire avec Sweet Alert
 const handleSubmit = async () => {
   if (formData.value.heure_fin <= formData.value.heure_deb) {
-    alert('L\'heure de fin doit être après l\'heure de début')
+    error('L\'heure de fin doit être après l\'heure de début')
     return
   }
   
-  const formDataToSend = {
-    ...formData.value,
-    heure_deb: formData.value.heure_deb + ":00",
-    heure_fin: formData.value.heure_fin + ":00"
+  try {
+    const formDataToSend = {
+      ...formData.value,
+      heure_deb: formData.value.heure_deb + ":00",
+      heure_fin: formData.value.heure_fin + ":00"
+    }
+
+    const response = await CalendarStore.createSaisieTemps(formDataToSend)
+    
+    if (response.success) {
+      const tacheSelectionnee = taches.value.find(t => t.id === Number(formData.value.tacheId))
+      events.value.push({
+        id: response.id,
+        start: `${formData.value.dateSaisie} ${formData.value.heure_deb}`,
+        end: `${formData.value.dateSaisie} ${formData.value.heure_fin}`,
+        title: tacheSelectionnee?.nom || 'Nouvelle tâche',
+        content: formData.value.commentaire,
+        class: 'leisure'
+      })
+
+      closeModal()
+      toast("Saisie de temps ajoutée avec succès !", "success")
+    } else {
+      error(response.error || "Erreur lors de l'ajout de la saisie")
+    }
+  } catch (err) {
+    console.error('Erreur lors de l\'ajout:', err)
+    error("Une erreur inattendue est survenue")
   }
-
-  const response = await CalendarStore.createSaisieTemps(formDataToSend)
-  
-  const tacheSelectionnee = taches.value.find(t => t.id === Number(formData.value.tacheId))
-  events.value.push({
-    id: response.id, // ID retourné par le backend
-    start: `${formData.value.dateSaisie} ${formData.value.heure_deb}`,
-    end: `${formData.value.dateSaisie} ${formData.value.heure_fin}`,
-    title: tacheSelectionnee?.nom || 'Nouvelle tâche',
-    content: formData.value.commentaire,
-    class: 'leisure'
-  })
-
-  closeModal()
 }
 
 // Fermer le modal
@@ -405,27 +407,10 @@ const closeModal = () => {
   showModal.value = false
 }
 
-/* Gestion du déplacement d'événement
-const onEventDrop = (event: any, originalEvent: any) => {
-  console.log('Événement déplacé:', { 
-    titre: event.title, 
-    ancienDebut: originalEvent.start, 
-    nouveauDebut: event.start 
-  })
-}
-
-// Gestion du redimensionnement d'événement
-const onEventResize = (event: any, originalEvent: any) => {
-  console.log('Durée modifiée:', { 
-    titre: event.title, 
-    ancienneDurée: `${originalEvent.start} - ${originalEvent.end}`, 
-    nouvelleDurée: `${event.start} - ${event.end}` 
-  })
-}
-*/
 // Fonction Soumettre
 const onSubmit = () => {
   console.log('Événements actuels à soumettre:', events.value)
+  success('Événements soumis avec succès !')
 }
 </script>
 
@@ -455,10 +440,13 @@ const onSubmit = () => {
   border-radius: 5px;
   cursor: pointer;
   font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .submit-btn:hover {
   background-color: #369870;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(66, 184, 131, 0.3);
 }
 
 /* Style personnalisé pour les événements */
@@ -531,7 +519,7 @@ const onSubmit = () => {
   align-items: center;
   justify-content: center;
   padding: 0;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 10;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
@@ -539,7 +527,8 @@ const onSubmit = () => {
 .delete-btn:hover {
   background-color: #e74c3c;
   color: white;
-  transform: scale(1.15);
+  transform: scale(1.2) rotate(90deg);
+  box-shadow: 0 4px 8px rgba(231, 76, 60, 0.4);
 }
 
 .vuecal__event.leisure {
@@ -548,79 +537,12 @@ const onSubmit = () => {
   color: #fff;
 }
 
-.vuecal__event.health {
-  background-color: rgba(66, 185, 131, 0.9);
-  border: 1px solid rgb(46, 165, 111);
-  color: #fff;
-}
-
-.vuecal__event.sport {
-  background-color: rgba(66, 129, 235, 0.9);
-  border: 1px solid rgb(46, 109, 215);
-  color: #fff;
-}
-
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+/* Styles du formulaire - comme ModalBox de projet.vue */
+.form-projet {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.modal-header h3 {
-  margin: 0;
-  color: #333;
-  font-size: 1.25rem;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 28px;
-  cursor: pointer;
-  color: #666;
-  line-height: 1;
+  flex-direction: column;
+  gap: 20px;
   padding: 0;
-  width: 30px;
-  height: 30px;
-}
-
-.close-btn:hover {
-  color: #333;
-}
-
-/* Formulaire */
-.event-form {
-  padding: 20px;
-}
-
-.form-group {
-  margin-bottom: 16px;
 }
 
 .form-row {
@@ -629,87 +551,107 @@ const onSubmit = () => {
   gap: 16px;
 }
 
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .form-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: 500;
-  color: #333;
-  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+  margin: 0;
 }
 
-.form-input {
+.form-group input,
+.form-group select,
+.form-group textarea {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.95rem;
-  transition: border-color 0.2s;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #42b883;
-}
-
-.form-input:disabled {
-  background-color: #f5f5f5;
-  cursor: not-allowed;
-}
-
-.form-input[readonly] {
-  background-color: #f9f9f9;
-}
-
-textarea.form-input {
-  resize: vertical;
+  padding: 10px 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background-color: #fff;
+  color: #2c3e50;
   font-family: inherit;
 }
 
-.form-hint {
-  display: block;
-  margin-top: 4px;
-  color: #999;
-  font-size: 0.85rem;
-  font-style: italic;
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
 }
 
-/* Actions */
+.form-group input:disabled,
+.form-group select:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-group input[readonly] {
+  background-color: #f9f9f9;
+  cursor: default;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-hint {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+  margin-top: 4px;
+}
+
 .form-actions {
   display: flex;
+  gap: 12px;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 24px;
+  margin-top: 10px;
   padding-top: 20px;
   border-top: 1px solid #e0e0e0;
 }
 
-.btn-cancel,
-.btn-submit {
+.btn-primary,
+.btn-secondary {
   padding: 10px 24px;
   border: none;
-  border-radius: 5px;
-  font-weight: 500;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 0.95rem;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.btn-cancel {
-  background-color: #f5f5f5;
-  color: #666;
-}
-
-.btn-cancel:hover {
-  background-color: #e0e0e0;
-}
-
-.btn-submit {
-  background-color: #42b883;
+.btn-primary {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
   color: white;
+  box-shadow: 0 4px 6px rgba(25, 118, 210, 0.3);
 }
 
-.btn-submit:hover {
-  background-color: #369870;
+.btn-primary:hover {
+  background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+  box-shadow: 0 6px 12px rgba(25, 118, 210, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background-color: #e0e0e0;
+  color: #2c3e50;
+}
+
+.btn-secondary:hover {
+  background-color: #bdbdbd;
+  transform: translateY(-2px);
 }
 
 /* Responsive */
@@ -717,10 +659,33 @@ textarea.form-input {
   .form-row {
     grid-template-columns: 1fr;
   }
-  
-  .modal-content {
-    width: 95%;
-    max-height: 95vh;
-  }
+}
+
+/* Scrollbar personnalisée (style bleu) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+  box-shadow: 0 0 10px rgba(25, 118, 210, 0.5);
+}
+
+/* Pour Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1976d2 #f1f1f1;
 }
 </style>

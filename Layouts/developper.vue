@@ -57,6 +57,15 @@
           class="mx-2 mb-1"
         ></v-list-item>
         <v-list-item
+          prepend-icon="mdi-folder-multiple"
+          title="Projets"
+          value="projects"
+          to="/projet"
+          color="primary"
+          rounded="xl"
+          class="mx-2 mb-1"
+        ></v-list-item>
+        <v-list-item
           prepend-icon="mdi-calendar"
           title="Calendrier"
           value="calendar"
@@ -123,7 +132,7 @@
     import { ref } from 'vue';
 import auth from '~/middleware/auth';
     const authStore=useAuthStore()
-    const drawer=ref(false);
+    const drawer=ref(true);
     const UserName=computed(()=>{
         if(authStore.user && authStore.user.nom && authStore.user.prenom)
         {
