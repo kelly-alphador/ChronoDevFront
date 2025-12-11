@@ -249,7 +249,8 @@ const formatTime = (dateTimeString: string) => {
 // Fonction de suppression avec Sweet Alert
 const deleteEvent = async (event: any) => {
   const result = await confirm("Êtes-vous sûr de vouloir supprimer cette saisie de temps ?")
-  console.log(event)
+  console.log("les evenement sont",event)
+  
   if (result.isConfirmed) {
     try {
       const response = await CalendarStore.deleteSaisieTemps(event.id)
@@ -392,6 +393,7 @@ const handleSubmit = async () => {
       })
 
       closeModal()
+      await loadSaisiesTemps()
       toast("Saisie de temps ajoutée avec succès !", "success")
     } else {
       error(response.error || "Erreur lors de l'ajout de la saisie")
