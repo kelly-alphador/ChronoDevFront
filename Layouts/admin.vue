@@ -19,8 +19,10 @@
           <v-icon>mdi-magnify</v-icon>
         </v-btn>
         <v-btn icon>
-          <v-icon>mdi-bell-outline</v-icon>
-        </v-btn>
+            <v-icon>mdi-bell-outline</v-icon>
+          </v-btn>
+      
+
         <v-avatar size="40" class="ml-2">
           <v-icon>mdi-account-circle</v-icon>
         </v-avatar>
@@ -77,7 +79,15 @@
           rounded="xl"
           class="mx-2 mb-1"
         ></v-list-item>
-       
+          <v-list-item
+          prepend-icon="mdi-calendar"
+          title="Calendrier"
+          value="calendar"
+          to="/cal"
+          color="primary"
+          rounded="xl"
+          class="mx-2 mb-1"
+        ></v-list-item>
       </v-list>
 
       <v-divider class="my-2"></v-divider>

@@ -7,7 +7,7 @@
       <v-col cols="6">
         <v-card elevation="3" class="rounded-lg">
           <v-card-item>
-            <template v-slot:prepend>6
+            <template v-slot:prepend>
               <v-avatar color="primary" size="56">
                 <v-icon size="32" color="white">mdi-calendar-week</v-icon>
               </v-avatar>

@@ -1,10 +1,7 @@
 <template>
   <div class="vuecal-container">
-    <!-- Header avec bouton soumettre -->
-    <div class="calendar-header">
-      <button class="submit-btn" @click="onSubmit">Soumettre</button>
-    </div>
-
+   
+   
     <ClientOnly>
       <VueCal
         ref="vuecal"
@@ -23,6 +20,7 @@
             class="event-item"
             @mouseenter="hoveredEventId = event.id"
             @mouseleave="hoveredEventId = null"
+            @contextmenu.prevent="openContextMenu($event, event)"
           >
             <div class="event-content-wrapper">
               <div class="event-header">
@@ -49,6 +47,27 @@
         </template>
       </VueCal>
     </ClientOnly>
+
+    <!-- Menu contextuel -->
+    <div 
+      v-if="contextMenu.visible" 
+      ref="contextMenuRef"
+      class="context-menu"
+      :style="{ top: contextMenu.y + 'px', left: contextMenu.x + 'px' }"
+    >
+      <div class="context-menu-item info" @click="voirDetails">
+        <span class="menu-icon">ℹ</span>
+        <span>Voir détails</span>
+      </div>
+      <div 
+        v-if="contextMenu.event?.decision === 'REFUSEE'"
+        class="context-menu-item refusal-details" 
+        @click="voirDetailRefus"
+      >
+        <span class="menu-icon">📋</span>
+        <span>Voir détail de refus</span>
+      </div>
+    </div>
 
     <!-- Modal de formulaire avec style ModalBox -->
     <ModalBox title="Ajouter un événement" v-if="showModal" @close="closeModal">
@@ -160,14 +179,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
 import VueCal from 'vue-cal'
 import { UseCalendarStore } from '~/stores/calendar'
 import { useAuthStore } from '~/stores/auth'
 import { useAlert } from "@/composables/useAlert"
 import ModalBox from '~/components/ModalBox.vue'
 
-const { success, error, confirm, toast } = useAlert()
+const { success, error, confirm, toast, toastDetails } = useAlert()
 
 definePageMeta({
   middleware: 'auth',
@@ -187,6 +206,7 @@ const currentLayout = computed(() => {
   
   return 'auth'
 })
+
 // Appliquer le layout dynamiquement
 watch(currentLayout, (newLayout) => {
   setPageLayout(newLayout)
@@ -217,12 +237,24 @@ interface CalendarEvent {
   title: string
   content?: string
   class?: string
+  decision?: string
+  commentaireValidation?: string
 }
 
 // États
 const events = ref<CalendarEvent[]>([])
 const vuecal = ref<any>(null)
 const showModal = ref(false)
+
+// Menu contextuel
+const contextMenu = ref({
+  visible: false,
+  x: 0,
+  y: 0,
+  event: null as CalendarEvent | null
+})
+
+const contextMenuRef = ref<HTMLElement | null>(null)
 
 // Données du formulaire
 const formData = ref({
@@ -246,10 +278,66 @@ const formatTime = (dateTimeString: string) => {
   return `${hours}:${minutes}`
 }
 
+// Ouvrir le menu contextuel
+const openContextMenu = (event: MouseEvent, calendarEvent: CalendarEvent) => {
+  contextMenu.value = {
+    visible: true,
+    x: event.clientX,
+    y: event.clientY,
+    event: calendarEvent
+  }
+}
+
+// Fermer le menu contextuel
+const closeContextMenu = () => {
+  contextMenu.value.visible = false
+  contextMenu.value.event = null
+}
+
+// Voir les détails
+const voirDetails = () => {
+  if (contextMenu.value.event) {
+    const event = contextMenu.value.event
+    const decisionLabel = event.decision === 'VALIDEE' ? 'Validé' : 
+                         event.decision === 'REFUSEE' ? 'Refusé' : 'En attente'
+    
+    const details = `
+      Tâche: ${event.title}
+      Horaire: ${formatTime(event.start)} - ${formatTime(event.end)}
+      Décision: ${decisionLabel}
+      ${event.content ? `Commentaire: ${event.content}` : ''}
+    `
+    toastDetails(details)
+  }
+  closeContextMenu()
+}
+
+// Voir le détail du refus
+const voirDetailRefus = () => {
+  if (contextMenu.value.event) {
+    const event = contextMenu.value.event
+    
+    if (event.commentaireValidation) {
+      toastDetails(`Motif du refus:\n${event.commentaireValidation}`)
+    } else {
+      toast("Aucun motif de refus disponible", "info")
+    }
+  }
+  closeContextMenu()
+}
+
+// Fermer le menu contextuel au clic ailleurs
+const handleClickOutside = (event: MouseEvent) => {
+  if (contextMenu.value.visible && 
+      contextMenuRef.value && 
+      !contextMenuRef.value.contains(event.target as Node)) {
+    closeContextMenu()
+  }
+}
+
 // Fonction de suppression avec Sweet Alert
 const deleteEvent = async (event: any) => {
   const result = await confirm("Êtes-vous sûr de vouloir supprimer cette saisie de temps ?")
-  console.log("les evenement sont",event)
   
   if (result.isConfirmed) {
     try {
@@ -278,6 +366,13 @@ const getUserFromLocalStorage = () => {
   }
 }
 
+// Méthode pour la couleur de l'événement
+const getEventClass = (decision: string | null) => {
+  if (decision === 'REFUSEE') return 'danger'
+  if (decision === 'VALIDEE') return 'success'
+  return 'leisure'
+}
+
 // Récupérer les saisies temps depuis le backend
 const loadSaisiesTemps = async () => {
   if (!username.value) return
@@ -291,7 +386,9 @@ const loadSaisiesTemps = async () => {
       end: `${saisie.dateSaisie.split('T')[0]} ${saisie.heureFin.substring(0, 5)}`,
       title: saisie.tacheNom,
       content: saisie.commentaire,
-      class: 'leisure'
+      class: getEventClass(saisie.decision),
+      decision: saisie.decision,
+      commentaireValidation: saisie.commentaireValidation
     }))
   } catch (err) {
     console.error('Erreur lors du chargement des saisies temps:', err)
@@ -308,6 +405,11 @@ onMounted(async () => {
   await GetProject()
   await getUserFromLocalStorage()
   await loadSaisiesTemps()
+  document.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 
 // Charger les tâches en fonction du projet sélectionné
@@ -461,6 +563,7 @@ const onSubmit = () => {
   height: 100%;
   width: 100%;
   gap: 8px;
+  cursor: context-menu;
 }
 
 .event-content-wrapper {
@@ -537,6 +640,73 @@ const onSubmit = () => {
   background-color: rgba(253, 156, 66, 0.9);
   border: 1px solid rgb(233, 136, 46);
   color: #fff;
+}
+
+.vuecal__event.success {
+  background-color: rgba(46, 204, 113, 0.9);
+  border: 1px solid rgb(39, 174, 96);
+  color: #fff;
+}
+
+.vuecal__event.danger {
+  background-color: rgba(231, 76, 60, 0.9);
+  border: 1px solid rgb(192, 57, 43);
+  color: #fff;
+}
+
+/* Menu contextuel */
+.context-menu {
+  position: fixed;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 8px 0;
+  min-width: 200px;
+  z-index: 10000;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.context-menu-item {
+  padding: 10px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: background-color 0.2s ease;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+.context-menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+.context-menu-item.info:hover {
+  background-color: #e3f2fd;
+  color: #2196f3;
+}
+
+.context-menu-item.refusal-details:hover {
+  background-color: #fff3e0;
+  color: #ff9800;
+}
+
+.menu-icon {
+  font-size: 16px;
+  font-weight: bold;
+  width: 20px;
+  text-align: center;
 }
 
 /* Styles du formulaire - comme ModalBox de projet.vue */

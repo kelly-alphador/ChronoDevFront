@@ -43,6 +43,18 @@ export function useAlert() {
       title: message,
     });
   }
+    function toastDetails(message: string) {
+    const Toast = Swal.mixin({
+      icon:"info",
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 5000,
+    });
 
-  return { success, error, confirm, toast };
+    return Toast.fire({
+      title: message,
+    });
+  }
+  return { success, error, confirm, toast, toastDetails };
 }
